@@ -20,7 +20,8 @@
     "verify:package": "tsx scripts/check-package.ts",
     "release:build": "pnpm build && tsx scripts/check-package.ts",
     "smoke:screen": "tsx scripts/screen-smoke.ts",
-    "smoke:chat": "tsx scripts/chat-smoke.ts"
+    "smoke:chat": "tsx scripts/chat-smoke.ts",
+    "smoke:install": "tsx scripts/install-smoke.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

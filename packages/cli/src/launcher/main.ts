@@ -250,7 +250,12 @@ export async function main(argv: readonly string[]): Promise<number> {
     return 0
   }
 
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+  // The bundle honours DSH_TUI_CAPTURE_OUTPUT by substituting a recorded
+  // terminal, which is how this repository's smokes drive the real profile
+  // without a PTY. The guard and the front door must agree on what counts as
+  // an interactive terminal, so the same override applies here.
+  const captureOverride = process.env.DSH_TUI_CAPTURE_OUTPUT ?? ''
+  if (captureOverride === '' && (!process.stdin.isTTY || !process.stdout.isTTY)) {
     throw new LauncherError(
       'the interactive terminal front end needs a TTY on both stdin and stdout',
       'Run dsh-tui directly in a terminal. For scripted use, boot the headless profile with dsh itself.',
