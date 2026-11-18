@@ -1,5 +1,7 @@
 # dsh-tui — DeepSeek Harness no terminal
 
+[English version](README.en.md)
+
 Front end **TUI** (Text User Interface) para o [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
 O DSH oficial só oferece Desktop e Web; o Web depende de um servidor HTTP, o que atrapalha acesso de outra
 máquina (bloqueios de rede/DeepSeek). O `dsh-tui` roda o **mesmo core** do DSH — mesmos agentes, mesmas
