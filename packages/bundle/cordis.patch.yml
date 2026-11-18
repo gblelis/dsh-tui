@@ -25,6 +25,29 @@
 - id: hmr
   disabled: true
 
+# The bundled DSH documentation skill lives inside `@deepseek-ai/dsh-agent-preset`
+# (the Web/Desktop presets point customSkillDirs at it). Resolve it from the
+# running dsh so `/skill:dsh-doc` answers questions from the installed version.
+- id: skill-filesystem
+  config:
+    customSkillDirs:
+      - !!js >-
+          (() => {
+            const { join, dirname } = process.getBuiltinModule('node:path');
+            const { createRequire } = process.getBuiltinModule('node:module');
+            const require = createRequire(process.argv[1]);
+            return join(dirname(require.resolve('@deepseek-ai/dsh-agent-preset/package.json')), 'skills');
+          })()
+
+# Web/Desktop enable per-subagent model selection and discovery on the spawn
+# tool; the terminal wants the same delegation controls.
+- id: tool-subagent
+  config:
+    provider: spawn
+    toolName: subagent
+    modelSelection: true
+    modelDiscovery: true
+
 - insert:
     # Parses this app's flags and publishes `ctx.tuiStartup`; also guards the
     # front-door row below (a failed or disabled UI row must exit non-zero
@@ -62,3 +85,20 @@
     # outside tmux/screen).
     - id: tmux-context
       name: '@deepseek-ai/dsh-tmux-context'
+
+    # The model needs today's date/time as context (the Web/Desktop presets
+    # mount this row; dsh-base does not).
+    - id: time-context
+      name: '@deepseek-ai/dsh-time-context'
+
+    # Scheduled instructions: the durable service plus its model-facing tools,
+    # same pair the Web profile mounts.
+    - id: schedule
+      name: '@deepseek-ai/dsh-schedule'
+    - id: tool-schedule
+      name: '@deepseek-ai/dsh-tool-schedule'
+
+    # Host-owned subagent model preference (read at Agent creation; without it
+    # the spawn tool only accepts the parent's own route).
+    - id: subagent-model-selection-settings
+      name: '@deepseek-ai/dsh-tool-subagent/model-selection-settings'

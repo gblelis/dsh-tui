@@ -20,6 +20,10 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | `ask_user_question` | ✅ | ✅ | ✅ |
 | Referências `@sessão` | ✅ | ✅ | ✅ |
 | MCP servers (`dsh-mcp-client` na camada do usuário) | ✅ | ✅ | ✅ |
+| Contexto de data/hora (`time-context`) | ✅ | ✅ | ✅ |
+| Tarefas agendadas (`schedule_*`) | ✅ | ✅ | ✅ |
+| Escolha de modelo por subagente (`list_subagent_models`) | ✅ | ✅ | ✅ |
+| Skill embutida `dsh-doc` | ✅ | ✅ | ✅ |
 
 ## Camada de terminal (o que o CLI adiciona)
 
@@ -70,6 +74,23 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 - **MCP**: o terminal usa o `@deepseek-ai/dsh-mcp-client`, o mesmo cliente do ACP, configurado na camada do
   usuário (stdio ou Streamable HTTP). Nenhum servidor vem ligado por padrão e um servidor fora do ar não
   impede o boot; as ferramentas aparecem como `mcp__<server>__<tool>` (ver `docs/plugins.md`).
+
+## Lacunas conhecidas (recursos do Web/Desktop ainda fora do CLI)
+
+Auditado em 2026-11 contra `dsh 0.2.2-rc.5` comparando a composição do profile Web com a do CLI.
+
+| Recurso | Por que falta | Situação |
+| --- | --- | --- |
+| Presets de agente (`standard`/`minimal`/`ptc`/`cordis`) | o Web/Desktop escolhe o preset por sessão; o CLI monta uma composição fixa (equivalente ao `standard`) | 🚧 |
+| Ferramenta `present` (entregáveis) + instruções de entrega | o Web renderiza os arquivos apresentados na conversa; o terminal precisaria de uma superfície própria | 🚧 |
+| Office kit (`tool-office`, `office-kit`, skill `office`) | depende do kit de renderização/documentos do host Web | ⛔ no terminal por enquanto |
+| Plugin market (`tool-plugin-market`) | o próprio preset `standard` do Web o deixa desligado; só o preset `cordis` o habilita | ⛔ |
+| Workspace registry (`workspace`, `workspace-files`, `load_workspace_dependencies`) | o Web gerencia workspaces e payloads Python/Node/pnpm; o CLI usa cwd + `working_directory` | ⛔ no terminal |
+| UI de configurações, MCP manager e plugin manager | no CLI são flags, `/comandos` e `cordis.patch.yml` (os mesmos serviços por baixo) | ⛔ UI |
+| Telemetria/produto, feedback de mensagem, quotes, stats/outline, export ZIP, open-in-app, upload, locale/tema/atalhos | específicos de navegador/app | ⛔ |
+
+Todas as demais linhas do profile Web (servidores HTTP/API, plugins `client-ui-*`, transporte) não têm
+equivalente no terminal por definição — o CLI conduz os mesmos serviços em processo.
 
 ## O que nunca vai divergir
 

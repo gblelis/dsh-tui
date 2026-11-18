@@ -92,6 +92,11 @@ plugins; o launcher só substitui `node_modules/@gblelis/dsh-tui-bundle`.
 | `tool-ask-user` | ferramenta `ask_user_question` para o diálogo de perguntas |
 | `session-reference` | referências `@sessão` no prompt |
 | `tmux-context` | contexto de multiplexador para o modelo (no-op fora de tmux/screen) |
+| `time-context` | data/hora atual (com fuso) no contexto do modelo — o Web monta no preset |
+| `schedule` + `tool-schedule` | tarefas agendadas (`schedule_*`); entregam enquanto a TUI estiver rodando |
+| `tool-subagent.modelSelection`/`modelDiscovery` | escolha de modelo e `list_subagent_models` por subagente |
+| `subagent-model-selection-settings` | preferência de modelo dos subagentes lida na criação do agente |
+| `skill-filesystem.customSkillDirs` | diretório de skills do `dsh-agent-preset` (habilita `/skill:dsh-doc`) |
 
 Essas linhas existem porque o `dsh-base` é compartilhado com o Web/Desktop; elas são as únicas adições
 funcionais que o terminal precisa.

@@ -141,10 +141,17 @@ try {
 }
 
 const requireFromCli = createRequire(join(cliDir, 'package.json'))
+/** Package root of a specifier: `@scope/name/sub/path` -> `@scope/name`. */
+const packageRoot = (specifier: string): string => {
+  const parts = specifier.split('/')
+  return parts.length > 2 ? parts.slice(0, 2).join('/') : specifier
+}
 const missingPlugins: string[] = []
 for (const name of inserted) {
   try {
-    requireFromCli.resolve(`${name}/package.json`)
+    // Plugin names may target a package subpath export; the package itself is
+    // what has to exist in the installation.
+    requireFromCli.resolve(`${packageRoot(name)}/package.json`)
   } catch {
     missingPlugins.push(name)
   }

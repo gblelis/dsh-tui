@@ -32,6 +32,12 @@ Terminal front end for DeepSeek Harness, shipped as one npm package
   and the manual path; `prepublishOnly` rebuilds the workspace so the tarball is never stale.
 - **Install smoke**: `pnpm smoke:install` packs the CLI, installs the tarball with npm into a clean prefix and
   boots the installed binary, so the published artifact is verified as a user receives it.
+- **Parity audit + missing rows**: compared the Web profile against the CLI composition and mounted the host
+  capabilities that were only available on Web/Desktop: `time-context` (current date/time), scheduled tasks
+  (`schedule` + `schedule_*` tools), per-subagent model selection/discovery
+  (`modelSelection`/`modelDiscovery` + `list_subagent_models` + the host preference row), and the bundled
+  `dsh-doc` skill through `skill-filesystem.customSkillDirs`. The remaining Web-only gaps (agent presets,
+  `present`, Office kit, workspace registry, UI surfaces) are documented in `docs/paridade.md`.
 - **`/login`**: masked prompt that stores the DeepSeek API key through the credentials service (the same
   store the Web Models page writes); the secret never enters the transcript.
 - **MCP servers**: documented `@deepseek-ai/dsh-mcp-client` rows in the user patch layer (stdio and

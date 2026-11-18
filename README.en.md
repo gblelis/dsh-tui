@@ -77,7 +77,9 @@ installation, which is what keeps upgrades to a `pnpm install` away.
 Verified against `dsh 0.2.2-rc.5`. The chat surface is ported in full: streaming, transcript with markdown
 and diffs, collapsible tool cards, reasoning, per-phase timing, token/cache footer, `/model`,
 `/permissions`, `/resume`, `/status`, `/export`, `/login`, `ask_user_question`, `@session` references,
-skills and `/skill:`, prompt history, file/command autocomplete.
+skills (including bundled `dsh-doc`) and `/skill:`, prompt history, file/command autocomplete, scheduled
+tasks (`schedule_*`), and per-subagent model selection (`list_subagent_models`). Known host-side gaps are
+listed in the parity document.
 
 | Gate | What it proves |
 | --- | --- |

@@ -36,6 +36,7 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | Sessões: nova, `--continue`, `--resume [id]`, `--session-id`, `/resume` | ✅ |
 | Seleção de modelo e esforço de raciocínio (`/model`, `--model`, `--reasoning-effort`) | ✅ |
 | `--permission-mode`, `/permissions` em sessão, `ask_user_question`, referências `@sessão` | ✅ |
+| Agendamento (`schedule_*`), modelo por subagente, data/hora no contexto, skill `/skill:dsh-doc` | ✅ |
 | `/export [caminho]` (Markdown), `/login` (chave mascarada), MCP via `dsh-mcp-client` | ✅ |
 | Testes unitários das partes puras (launcher, tokens, timing, prompt, config) | ✅ |
 | Smoke de tela: boot real + renderização conferida no xterm (headless) | ✅ `pnpm smoke:screen` |
