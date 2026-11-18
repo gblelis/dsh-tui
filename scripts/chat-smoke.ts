@@ -105,6 +105,8 @@ const args = process.argv.slice(2)
 const typingDelay = Number(option(args, 'typing-delay', '6000'))
 const exitDelay = Number(option(args, 'exit-delay', '20000'))
 const PROMPT = 'hello there'
+/** Fake key stored through /login; the mock server accepts exactly this value. */
+const LOGIN_KEY = 'sk-smoke'
 const outFile = option(args, 'out', '')
 const home = mkdtempSync(join(tmpdir(), 'dsh-tui-screen-'))
 const cli = join(root, 'packages/cli/lib/bin.js')
@@ -154,6 +156,12 @@ const result = await runTui([runtime.bin, '--profile', 'tui', '--new'], {
       // the command reaches the preset service and reports the switch.
       ...'/permissions danger-full-access'.split('').map((char, index) => ({ afterMs: typingDelay + 6000 + index * 25, data: char })),
       { afterMs: typingDelay + 6000 + '/permissions danger-full-access'.length * 25 + 200, data: CR },
+      // /login opens a masked dialog; the key goes straight to the credentials
+      // service and must never appear in the transcript.
+      ...'/login'.split('').map((char, index) => ({ afterMs: typingDelay + 8500 + index * 25, data: char })),
+      { afterMs: typingDelay + 8500 + '/login'.length * 25 + 200, data: CR },
+      ...LOGIN_KEY.split('').map((char, index) => ({ afterMs: typingDelay + 9500 + index * 25, data: char })),
+      { afterMs: typingDelay + 9500 + LOGIN_KEY.length * 25 + 200, data: CR },
       { afterMs: exitDelay, data: CTRL_D },
     ]),
   }, exitDelay + 40_000)
@@ -188,6 +196,10 @@ if (exported.length === 0) {
   if (!markdown.includes(REPLY)) failures.push('/export transcript is missing the reply')
   if (!screen.includes('Exported this session to')) failures.push('/export did not confirm the path in the transcript')
   if (!screen.includes('Permission preset:')) failures.push('/permissions did not confirm the switch in the transcript')
+  if (!screen.includes('DeepSeek API key stored.')) failures.push('/login did not confirm the stored credential')
+  if (screen.includes(LOGIN_KEY)) failures.push('the secret leaked into the transcript')
+  const credentialsFile = join(home, '.credentials.yaml')
+  if (!readFileSync(credentialsFile, 'utf8').includes('DEEPSEEK_API_KEY')) failures.push('/login did not persist the credential')
 }
 
 // Phase 2: reopening with --continue must land on the same session and show the

@@ -111,6 +111,7 @@ import {
   compactTargetLabel,
   DetailsDialog,
   PermissionsDialog,
+  SecretDialog,
   diagnosticMeter,
   formatDiagnosticCount,
   formatDiagnosticNumber,
@@ -1088,6 +1089,46 @@ export function createTuiChat(
   // session fact: the command writes the preset through the session's durable
   // knob setters, exactly like the Web and Desktop selectors do.
   let permissionOverlay: TuiOverlaySession | undefined
+  // The credentials service is the same store the Web Models page writes, so a
+  // key stored here reaches the next model call without a restart. Only the
+  // reference name is needed, not the provider package's runtime helpers.
+  let loginOverlay: TuiOverlaySession | undefined
+  const runLoginCommand = (): void => {
+    const credentials = ctx.get('credentials') as { set(ref: string, value: string): Promise<void> } | undefined
+    if (credentials === undefined) {
+      appendNotice('This profile has no credentials service; export DEEPSEEK_API_KEY instead.', 'warning')
+      return
+    }
+    void loginOverlay?.close()
+    const session = overlayManager.open({
+      create: () => new SecretDialog(
+        'DeepSeek API key',
+        'Stored through the credentials service; the key never enters the transcript.',
+        palette,
+        (value: string) => {
+          void session.close()
+          void credentials.set('DEEPSEEK_API_KEY', value).then(
+            () => {
+              if (disposed) return
+              appendNotice('DeepSeek API key stored. New model calls use it.', 'info')
+              requestRender()
+            },
+            (error: unknown) => {
+              if (!disposed) appendNotice(`Could not store the key: ${errorChain(error)}`, 'error')
+            },
+          )
+        },
+        () => { void session.close() },
+      ),
+      options: { width: resolved.detailsDialogWidth, anchor: 'center', margin: 1 },
+    })
+    loginOverlay = session
+    void session.closed.then(() => {
+      if (loginOverlay === session) loginOverlay = undefined
+    })
+    requestRender()
+  }
+
   const runPermissionCommand = (raw: string): void => {
     const permissions = ctx.get('permissionPresets') as PermissionPresetService | undefined
     if (permissions === undefined) {
@@ -1423,6 +1464,14 @@ export function createTuiChat(
         await writeFile(file, markdown, 'utf8')
         appendNotice(`Exported this session to ${file}`, 'info')
         requestRender()
+        return { kind: 'success' }
+      },
+    })
+    commandCtx.commands.register({
+      name: 'login',
+      description: 'Store a DeepSeek API key through the credentials service',
+      handler: () => {
+        runLoginCommand()
         return { kind: 'success' }
       },
     })

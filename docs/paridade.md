@@ -42,7 +42,8 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | Painel de todos, overlay de diffs | ✅ |
 | Exportar conversa (`/export [caminho]`, Markdown) | ✅ |
 | `/permissions` interativo (seletor + argumento) | ✅ (também na flag `--permission-mode`) |
-| `/login` / OAuth no terminal | 🚧 (use env/`.env`/Desktop) |
+| `/login` (chave via credentials service) | ✅ (OAuth segue no Desktop) |
+| Servidores MCP (`dsh-mcp-client` na camada do usuário) | ✅ documentado em `plugins.md` |
 
 ## Itens só de Desktop/Web (por design)
 

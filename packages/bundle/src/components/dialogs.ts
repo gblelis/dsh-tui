@@ -1301,3 +1301,56 @@ export class PermissionsDialog implements Component {
     ], width, this.palette)
   }
 }
+
+/**
+ * Masked single-line prompt for a secret. The value never appears in the
+ * transcript: the dialog renders one bullet per character and hands the raw
+ * string to the caller, which stores it through the credentials service.
+ */
+export class SecretDialog implements Component {
+  private value = ''
+
+  constructor(
+    private readonly title: string,
+    private readonly hint: string,
+    private readonly palette: Palette,
+    private readonly submit: (value: string) => void,
+    private readonly cancel: () => void,
+  ) {}
+
+  invalidate(): void {}
+
+  handleInput(data: string): void {
+    if (matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl('c'))) {
+      this.cancel()
+      return
+    }
+    if (matchesKey(data, Key.enter) || data === '\r') {
+      if (this.value === '') {
+        this.cancel()
+        return
+      }
+      const value = this.value
+      this.value = ''
+      this.submit(value)
+      return
+    }
+    if (matchesKey(data, Key.backspace)) {
+      this.value = [...this.value].slice(0, -1).join('')
+      return
+    }
+    // Printable input only; control sequences (arrows, paste markers) are ignored.
+    const chars = [...data].filter(char => char.codePointAt(0) !== undefined && char.codePointAt(0)! >= 0x20 && char.codePointAt(0) !== 0x7f)
+    if (chars.length > 0 && !data.includes('\u001b')) this.value += chars.join('')
+  }
+
+  render(width: number): string[] {
+    const masked = '•'.repeat([...this.value].length)
+    return renderDialog(this.title, [
+      ` ${this.palette.accent(masked === '' ? this.palette.dim('type the key') : masked)}`,
+      '',
+      this.palette.dim(this.hint),
+      this.palette.dim('Enter store • Esc cancel'),
+    ], width, this.palette)
+  }
+}

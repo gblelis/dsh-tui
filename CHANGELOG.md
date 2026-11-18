@@ -21,6 +21,10 @@ Terminal front end for DeepSeek Harness, shipped as one npm package
   results; synthetic model-only context omitted) with collision-safe default file names.
 - **`/permissions [preset]`**: selector overlay that marks the active preset and switches it through the
   session's durable knob setters, plus a direct argument form for scripting.
+- **`/login`**: masked prompt that stores the DeepSeek API key through the credentials service (the same
+  store the Web Models page writes); the secret never enters the transcript.
+- **MCP servers**: documented `@deepseek-ai/dsh-mcp-client` rows in the user patch layer (stdio and
+  Streamable HTTP); the boot stays up when a server is unreachable.
 - **Sessions**: new (`session-<uuid>`), `--continue`, `--resume <id>`, `--session-id`, `/resume` handoff;
   adopts existing V4 sessions and refuses subagent or foreign-`cwd` sessions with a clear message.
 - **Verification**: unit suites (launcher semantics, tokens, timing, prompt templates, config), a headless

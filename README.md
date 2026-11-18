@@ -30,15 +30,15 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | --- | --- |
 | Boot do profile + launcher (`install`, `sync`, `doctor`, `profile`, `runtime`, `version`, `print`) | ✅ verificado |
 | Chat completo: streaming, transcript, tool cards, diffs, raciocínio, timing por fase | ✅ portado |
-| Comandos `help`, `model`, `clear`, `details`, `palette`, `reload`, `resume`, `status`, `exit`/`quit` | ✅ |
+| Comandos `help`, `model`, `clear`, `details`, `palette`, `reload`, `resume`, `status`, `export`, `permissions`, `login`, `exit`/`quit` | ✅ |
 | Sessões: nova, `--continue`, `--resume [id]`, `--session-id`, `/resume` | ✅ |
 | Seleção de modelo e esforço de raciocínio (`/model`, `--model`, `--reasoning-effort`) | ✅ |
-| `--permission-mode`, `ask_user_question`, referências `@sessão` | ✅ |
+| `--permission-mode`, `/permissions` em sessão, `ask_user_question`, referências `@sessão` | ✅ |
+| `/export [caminho]` (Markdown), `/login` (chave mascarada), MCP via `dsh-mcp-client` | ✅ |
 | Testes unitários das partes puras (launcher, tokens, timing, prompt, config) | ✅ |
 | Smoke de tela: boot real + renderização conferida no xterm (headless) | ✅ `pnpm smoke:screen` |
 | Smoke de conversa: prompt digitado, stream do modelo e transcript conferidos | ✅ `pnpm smoke:chat` |
 | Testes com PTY de verdade e snapshots ricos (cards, diffs, diálogos) | 🚧 próxima etapa |
-| `/login` e linha de MCP no profile | 🚧 roadmap |
 
 O profile foi composto e validado com `dsh 0.2.2-rc.5` (`--dump-config`), e o boot real é exercitado de
 ponta a ponta por dois smokes: o bundle sabe gravar o que a TUI escreveria (`DSH_TUI_CAPTURE_OUTPUT`,

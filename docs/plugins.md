@@ -102,6 +102,41 @@ configurações do DSH — nada específico do terminal.
 Essas linhas existem porque o `dsh-base` é compartilhado com o Web/Desktop; elas são as únicas adições
 funcionais que o terminal precisa.
 
+## Servidores MCP
+
+O `dsh-base` traz a descoberta/leitura de recursos MCP (`mcp-resources`), mas **nenhum servidor MCP vem
+ligado por padrão**. Para usar as ferramentas de um servidor no terminal, insira a linha do cliente na sua
+camada — é exatamente o mesmo plugin (`@deepseek-ai/dsh-mcp-client`) que o ACP usa:
+
+```yaml
+# $DSH_HOME/profiles/tui/cordis.patch.yml
+- insert:
+    # Servidor local via stdio (npx baixa o pacote na primeira execução).
+    - id: mcp-github
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: github
+        transport: stdio
+        command: npx
+        args: ['-y', '@modelcontextprotocol/server-github']
+        env:
+          GITHUB_TOKEN: !!js process.env.GITHUB_TOKEN
+
+    # Servidor remoto (Streamable HTTP).
+    - id: mcp-web
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: web
+        transport: streamable-http
+        url: http://localhost:3000/mcp
+        headers:
+          Authorization: !!js '`Bearer ${process.env.MCP_TOKEN}`'
+```
+
+As ferramentas aparecem para o modelo como `mcp__<serverName>__<tool>` e em `/status`. O entry é opcional no
+boot: se o servidor não conectar, a TUI sobe e o servidor fica sem ferramentas (os erros vão para o log).
+Como o `hmr` está desligado, reinicie a TUI depois de editar a camada.
+
 ## Não faça
 
 - **Não adicione `@deepseek-ai/*` em `dependencies` do bundle.** O `pnpm compat` falha e o profile teria
