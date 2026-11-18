@@ -41,10 +41,12 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | `/export`, `/permissions`, `/login`, linha de MCP no profile | 🚧 roadmap |
 
 O profile foi composto e validado com `dsh 0.2.2-rc.5` (`--dump-config`), e o boot real é exercitado de
-ponta a ponta por um smoke de tela: o bundle sabe gravar o que a TUI escreveria (`DSH_TUI_CAPTURE_OUTPUT`,
-documentado como hook de teste) e o script `pnpm smoke:screen` inicializa o launcher, monta o profile, sobe
-o dsh e confere a tela renderizada num terminal virtual. O ambiente de desenvolvimento não tem PTY, então os
-testes com terminal de verdade ficam no CI/na sua máquina.
+ponta a ponta por dois smokes: o bundle sabe gravar o que a TUI escreveria (`DSH_TUI_CAPTURE_OUTPUT`,
+documentado como hook de teste) e `pnpm smoke:screen` confere a tela renderizada num terminal virtual;
+`pnpm smoke:chat` vai além e conversa — digita um prompt tecla por tecla contra um servidor de modelos
+local compatível com Messages e confere no transcript a mensagem do usuário, o stream do assistente, os
+cards de contexto e a saída limpa. O ambiente de desenvolvimento não tem PTY, então testes com terminal de
+verdade ficam no CI/na sua máquina.
 
 ---
 
