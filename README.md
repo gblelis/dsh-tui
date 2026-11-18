@@ -37,7 +37,7 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | `/export [caminho]` (Markdown), `/login` (chave mascarada), MCP via `dsh-mcp-client` | ✅ |
 | Testes unitários das partes puras (launcher, tokens, timing, prompt, config) | ✅ |
 | Smoke de tela: boot real + renderização conferida no xterm (headless) | ✅ `pnpm smoke:screen` |
-| Smoke de conversa: prompt digitado, stream do modelo e transcript conferidos | ✅ `pnpm smoke:chat` |
+| Smoke de conversa: prompt, stream, tool card real (bash), `/export`, `/permissions`, `/login` e retomada | ✅ `pnpm smoke:chat` |
 | Smoke de instalação: `npm pack` → `npm install -g` → boot do binário instalado | ✅ `pnpm smoke:install` |
 | Testes com PTY de verdade e snapshots ricos (cards, diffs, diálogos) | 🚧 próxima etapa |
 

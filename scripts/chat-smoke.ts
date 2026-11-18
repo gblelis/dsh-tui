@@ -103,10 +103,14 @@ async function screenOf(file: string): Promise<string> {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const args = process.argv.slice(2)
 const typingDelay = Number(option(args, 'typing-delay', '6000'))
-const exitDelay = Number(option(args, 'exit-delay', '20000'))
+const exitDelay = Number(option(args, 'exit-delay', '22000'))
 const PROMPT = 'hello there'
 /** Fake key stored through /login; the mock server accepts exactly this value. */
 const LOGIN_KEY = 'sk-smoke'
+/** Second prompt: the scripted tool call makes the agent run this bash command. */
+const TOOL_PROMPT = 'run the card check'
+/** stdout of the scripted bash call, asserted on the rendered tool card. */
+const CARD_MARKER = 'card-marker'
 const outFile = option(args, 'out', '')
 const home = mkdtempSync(join(tmpdir(), 'dsh-tui-screen-'))
 const cli = join(root, 'packages/cli/lib/bin.js')
@@ -125,13 +129,25 @@ const runtimeInfo = spawnSync(process.execPath, launcherArgs('runtime', ['--json
 const runtime = JSON.parse(runtimeInfo.stdout) as { bin: string; version: string; compatible: boolean }
 if (!runtime.compatible) throw new Error(`runtime ${runtime.version} is outside the supported range`)
 const REPLY = 'Acknowledged, this is a streamed smoke reply.'
-const model = await startMockLlmServer({ sequence: ['success'], successText: REPLY, apiKey: 'sk-smoke', chunkSize: 8, port: MOCK_PORT })
+const model = await startMockLlmServer({
+  sequence: ['success', 'tool_call_success', 'success'],
+  successText: REPLY,
+  toolName: 'bash',
+  toolArguments: JSON.stringify({ description: 'Print the smoke marker', command: 'echo card-marker' }),
+  apiKey: 'sk-smoke',
+  chunkSize: 8,
+  port: MOCK_PORT,
+})
 
 
 // Point the DeepSeek adapter row at the local Messages server. The profile
 // user layer merges `config` into an existing row, so this needs no new plugin.
+// The scripted tool call must be the first entry the *agent* turn consumes;
+// without this the background title request eats it, so title generation is
+// off for this run.
 writeFileSync(join(home, 'profiles', 'tui', 'cordis.patch.yml'),
-  '- id: llm-deepseek\n  config:\n    baseURL: http://127.0.0.1:' + String(MOCK_PORT) + '\n')
+  '- id: llm-deepseek\n  config:\n    baseURL: http://127.0.0.1:' + String(MOCK_PORT) + '\n'
+  + '- id: session-title-llm\n  disabled: true\n')
 
 const rawFile = join(home, 'screen.raw')
 const errorsFile = join(home, 'stderr.log')
@@ -154,14 +170,18 @@ const result = await runTui([runtime.bin, '--profile', 'tui', '--new'], {
       { afterMs: typingDelay + 4000 + '/export'.length * 25 + 200, data: CR },
       // The selector itself has unit coverage; here the argument path proves
       // the command reaches the preset service and reports the switch.
-      ...'/permissions danger-full-access'.split('').map((char, index) => ({ afterMs: typingDelay + 6000 + index * 25, data: char })),
-      { afterMs: typingDelay + 6000 + '/permissions danger-full-access'.length * 25 + 200, data: CR },
+      ...'/permissions danger-full-access'.split('').map((char, index) => ({ afterMs: typingDelay + 5500 + index * 25, data: char })),
+      { afterMs: typingDelay + 5500 + '/permissions danger-full-access'.length * 25 + 200, data: CR },
       // /login opens a masked dialog; the key goes straight to the credentials
       // service and must never appear in the transcript.
-      ...'/login'.split('').map((char, index) => ({ afterMs: typingDelay + 8500 + index * 25, data: char })),
-      { afterMs: typingDelay + 8500 + '/login'.length * 25 + 200, data: CR },
-      ...LOGIN_KEY.split('').map((char, index) => ({ afterMs: typingDelay + 9500 + index * 25, data: char })),
-      { afterMs: typingDelay + 9500 + LOGIN_KEY.length * 25 + 200, data: CR },
+      ...'/login'.split('').map((char, index) => ({ afterMs: typingDelay + 7000 + index * 25, data: char })),
+      { afterMs: typingDelay + 7000 + '/login'.length * 25 + 200, data: CR },
+      ...LOGIN_KEY.split('').map((char, index) => ({ afterMs: typingDelay + 7800 + index * 25, data: char })),
+      { afterMs: typingDelay + 7800 + LOGIN_KEY.length * 25 + 200, data: CR },
+      // A second turn: the mock answers with a scripted bash call and only then
+      // with text, so the transcript has to render a real tool card.
+      ...TOOL_PROMPT.split('').map((char, index) => ({ afterMs: typingDelay + 8500 + index * 25, data: char })),
+      { afterMs: typingDelay + 8500 + TOOL_PROMPT.length * 25 + 200, data: CR },
       { afterMs: exitDelay, data: CTRL_D },
     ]),
   }, exitDelay + 40_000)
@@ -198,6 +218,10 @@ if (exported.length === 0) {
   if (!screen.includes('Permission preset:')) failures.push('/permissions did not confirm the switch in the transcript')
   if (!screen.includes('DeepSeek API key stored.')) failures.push('/login did not confirm the stored credential')
   if (screen.includes(LOGIN_KEY)) failures.push('the secret leaked into the transcript')
+  if (!screen.includes(CARD_MARKER)) failures.push('the scripted bash call did not render its output')
+  if (!screen.includes('Tool / bash')) failures.push('the tool card did not render its header')
+  if (!screen.includes('Print the smoke marker')) failures.push('the tool card did not show the call description')
+  if (!screen.includes('[exit 0]')) failures.push('the tool card did not render the call result')
   const credentialsFile = join(home, '.credentials.yaml')
   if (!readFileSync(credentialsFile, 'utf8').includes('DEEPSEEK_API_KEY')) failures.push('/login did not persist the credential')
 }
