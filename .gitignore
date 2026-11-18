@@ -1,0 +1,21 @@
+node_modules/
+lib/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+.tmp/
+*.tgz
+.npm-cache/
+.dsh-tui/
+
+# Built bundle copied into the published CLI package.
+packages/cli/bundle/
+# Copied from the repository root at build time.
+packages/cli/LICENSE
+
+# Optional development checkout of the upstream harness (see docs/porting/PROVENANCE.md).
+upstream/
+
+# Local pnpm store directory (not part of the project).
+.pnpm-store/

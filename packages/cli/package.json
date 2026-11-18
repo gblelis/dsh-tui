@@ -1,0 +1,39 @@
+{
+  "name": "@gblelis/dsh-tui",
+  "version": "0.1.0",
+  "description": "Interactive terminal front end (TUI) for DeepSeek Harness: runs a pinned dsh runtime with the dsh-tui profile bundle",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "dsh-tui": "./lib/bin.js"
+  },
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "bundle",
+    "LICENSE",
+    "NOTICE.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24.9.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown && tsx ./scripts/embed-bundle.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.2.2-rc.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsdown": "^0.22.2",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.3"
+  }
+}

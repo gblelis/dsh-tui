@@ -1,0 +1,64 @@
+# dsh-tui: interactive terminal front end over @deepseek-ai/dsh-base.
+#
+# This bundle only composes and configures published plugins. It never patches
+# the dsh core: every capability below already exists in dsh-base; this layer
+# adds the terminal front door and the few rows a terminal surface needs (the
+# ask_user_question tool, session references, referential titles/search, and
+# tmux context).
+
+# Persona mirrors the shipped Web/Desktop product identity.
+- id: system-prompt
+  config:
+    personaPrefix: >-
+      You are a coding agent powered by the {{model}} model.
+
+# `/resume`, title snapshots and session search. dsh-base mounts this row with
+# `openAt: never`; the in-memory index is opened on the first search only, so a
+# normal session never touches SQLite.
+- id: session-query-sqlite
+  config:
+    path: ':memory:'
+    openAt: first-search
+
+# A terminal session is a long-lived interactive process: hot-reloading the
+# profile mid-conversation would re-import the front door under a live agent.
+- id: hmr
+  disabled: true
+
+- insert:
+    # Parses this app's flags and publishes `ctx.tuiStartup`; also guards the
+    # front-door row below (a failed or disabled UI row must exit non-zero
+    # instead of leaving a live process with no interface).
+    - id: tui-startup
+      name: '@gblelis/dsh-tui-bundle/startup'
+
+    # `ctx.tuiPrompt`: the `${name}` input-prompt template service.
+    - id: tui-prompt
+      name: '@gblelis/dsh-tui-bundle/prompt'
+
+    # The terminal front door itself.
+    - id: tui
+      name: '@gblelis/dsh-tui-bundle'
+      inject: [tuiStartup, tuiPrompt]
+      config:
+        sessionId: !!js ctx.tuiStartup.sessionId
+        resumeSessionId: !!js ctx.tuiStartup.resumeSessionId
+        continueSession: !!js ctx.tuiStartup.continueSession
+        provider: !!js ctx.tuiStartup.provider
+        model: !!js ctx.tuiStartup.model
+        reasoningEffort: !!js ctx.tuiStartup.reasoningEffort
+        permissionMode: !!js ctx.tuiStartup.permissionMode
+        showWelcome: !!js ctx.tuiStartup.showWelcome
+
+    # dsh-base exposes the `user-questions` seam but not the model-facing tool.
+    - id: tool-ask-user
+      name: '@deepseek-ai/dsh-tool-ask-user'
+
+    # `@session` references typed in the prompt.
+    - id: session-reference
+      name: '@deepseek-ai/dsh-session-reference'
+
+    # Terminal-multiplexer context for the model (tool-independent, no-ops
+    # outside tmux/screen).
+    - id: tmux-context
+      name: '@deepseek-ai/dsh-tmux-context'

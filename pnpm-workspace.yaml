@@ -1,0 +1,21 @@
+packages:
+  - packages/*
+
+# The bundle declares every `@deepseek-ai/*` it imports as an optional peer
+# (that is what the deployed profile resolves against the dsh installation) and
+# as a devDependency for local typechecking. dsh's own packages declare many
+# internal peers, so peers are auto-installed: without them a pnpm workspace
+# cannot even import dsh-llm, while a published npm install always satisfies
+# them. CI pins the whole surface through the lockfile.
+autoInstallPeers: true
+
+# The TUI needs three small additions to pi-tui's Editor (frame: 'none', custom
+# prompt prefixes, and the corrected wordWrapLine). The patch is applied while
+# building our self-contained artifact, so consumers never patch anything.
+patchedDependencies:
+  '@earendil-works/pi-tui@0.80.7': patches/@earendil-works__pi-tui@0.80.7.patch
+
+# The workspace mirrors a published dsh installation (flat node_modules), so
+# tests and the boot smoke resolve transitive packages exactly as an npm/npx
+# install of @deepseek-ai/dsh does.
+nodeLinker: hoisted

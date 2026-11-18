@@ -1,0 +1,106 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # 24.9 is the declared floor (same as dsh); 24.x proves the floor holds.
+        node: ['24.9.0', '24.x']
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The compat gate reads the upstream tree at the pinned release.
+          submodules: recursive
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.24.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Compatibility gate
+        run: pnpm compat
+
+      - name: Package gate
+        run: pnpm verify:package
+
+      - name: Screen smoke (renders the real TUI headlessly)
+        run: pnpm smoke:screen -- --delay 5000
+
+      - name: Chat smoke (scripted prompt against a local model server)
+        run: pnpm smoke:chat
+
+      - name: Smoke (launcher, no TTY)
+        run: |
+          set -euo pipefail
+          export DSH_HOME="$(mktemp -d)"
+          node packages/cli/lib/bin.js install
+          node packages/cli/lib/bin.js doctor --json > doctor.json || true
+          cat doctor.json
+          node packages/cli/lib/bin.js version
+          # Composition must succeed and list the terminal rows.
+          node "$(node packages/cli/lib/bin.js runtime | head -1)" --profile tui --dump-config > dump.yml
+          grep -q "id: tui$" dump.yml
+          grep -q "@gblelis/dsh-tui-bundle/startup" dump.yml
+          # Without a TTY the front door must fail loudly, never hang.
+          if node packages/cli/lib/bin.js </dev/null >/dev/null 2>boot.err; then
+            echo "expected a failure without a TTY"; exit 1
+          fi
+          grep -q "needs a TTY" boot.err
+
+  windows-smoke:
+    name: windows launcher smoke
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.24.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Launcher commands
+        shell: pwsh
+        run: |
+          $env:DSH_HOME = Join-Path $env:RUNNER_TEMP "dsh-home"
+          node packages/cli/lib/bin.js install
+          node packages/cli/lib/bin.js version
+          node packages/cli/lib/bin.js profile --json
