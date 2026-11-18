@@ -19,7 +19,7 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | Subagentes (`task`) | ✅ | ✅ | ✅ |
 | `ask_user_question` | ✅ | ✅ | ✅ |
 | Referências `@sessão` | ✅ | ✅ | ✅ |
-| MCP servers | 🚧 | ✅ | ✅ |
+| MCP servers (`dsh-mcp-client` na camada do usuário) | ✅ | ✅ | ✅ |
 
 ## Camada de terminal (o que o CLI adiciona)
 
