@@ -19,7 +19,9 @@ permissive and compatible, so the combined work is distributed under this reposi
 original notice preserved.
 
 The upstream sources were **not modified**: the checkout at `upstream/deepseek-harness` is a read-only
-reference (git submodule) pinned to the release this project supports.
+reference (git submodule) pinned to the release this project supports. The submodule is a convenience for
+reviewers — building, testing and publishing this project never reads it, so a clone without submodule
+access still works; clone it only to diff the port against the pinned sources.
 
 ## File map
 
