@@ -5,6 +5,7 @@
  * @module @gblelis/dsh-tui-bundle/components/text
  */
 
+/* eslint-disable no-control-regex -- this module strips terminal control bytes on purpose */
 const TERMINAL_CONTROL_PATTERN = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/gu
 const TERMINAL_OSC_PATTERN = /(?:\u001B\]|\u009D)(?:(?!\u0007|\u001B\\)[\s\S])*(?:\u0007|\u001B\\|$)/gu
 const TERMINAL_CSI_PATTERN = /(?:\u001B\[|\u009B)[0-?]*[ -/]*[@-~]/gu

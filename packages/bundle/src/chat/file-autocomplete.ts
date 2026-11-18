@@ -87,6 +87,7 @@ export function formatFileMention(
   preserveQuote: boolean,
 ): string | undefined {
   const path = candidate.kind === 'directory' ? `${candidate.path}/` : candidate.path
+  // eslint-disable-next-line no-control-regex -- reject control bytes in a pasted path
   if (/[\u0000-\u001f\u007f-\u009f"]/u.test(path)) return undefined
   const quoted = preserveQuote || /\s/u.test(path)
   if (!quoted) return `@${path}`
@@ -241,7 +242,7 @@ async function resolveDisplayDirectory(
       const status = await lstat(current)
       signal.throwIfAborted()
       if (status.isSymbolicLink() || !status.isDirectory()) return undefined
-    } catch (_error: unknown) {
+    } catch {
       signal.throwIfAborted()
       return undefined
     }
@@ -255,7 +256,7 @@ async function readDirectory(absolute: string, signal: AbortSignal) {
     const entries = await readdir(absolute, { withFileTypes: true })
     signal.throwIfAborted()
     return entries.sort((left, right) => compareText(left.name, right.name))
-  } catch (_error: unknown) {
+  } catch {
     signal.throwIfAborted()
     // An unreadable/missing subtree contributes no candidates; other readable
     // branches remain useful and autocomplete is advisory.

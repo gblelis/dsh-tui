@@ -44,19 +44,17 @@ function initialModel(ctx: Context, startup: TuiStartupValues): ModelSelection |
   const defaults = ctx.get('agentDefaultModel')
   if (defaults === undefined) return undefined
   const selection = defaults.currentSelection()
+  // A flag that names only one half of the route keeps the stored other half;
+  // the effort falls back to the stored one when the flag omits it.
+  const effort = startup.reasoningEffort === undefined
+    ? selection.reasoningEffort
+    : ReasoningEffortId(startup.reasoningEffort)
+  const reasoning = effort === undefined ? {} : { reasoningEffort: effort }
   if (startup.model !== undefined) {
-    return {
-      provider: selection.provider,
-      model: startup.model,
-      ...startup.reasoningEffort === undefined ? { ...selection.reasoningEffort === undefined ? {} : { reasoningEffort: selection.reasoningEffort } } : { reasoningEffort: ReasoningEffortId(startup.reasoningEffort) },
-    }
+    return { provider: selection.provider, model: startup.model, ...reasoning }
   }
   if (startup.provider !== undefined) {
-    return {
-      provider: startup.provider,
-      model: selection.model,
-      ...startup.reasoningEffort === undefined ? { ...selection.reasoningEffort === undefined ? {} : { reasoningEffort: selection.reasoningEffort } } : { reasoningEffort: ReasoningEffortId(startup.reasoningEffort) },
-    }
+    return { provider: startup.provider, model: selection.model, ...reasoning }
   }
   if (startup.reasoningEffort === undefined) return { ...selection }
   return { provider: selection.provider, model: selection.model, reasoningEffort: ReasoningEffortId(startup.reasoningEffort) }

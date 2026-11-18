@@ -77,7 +77,7 @@ export function gitBranch(cwd: string): string | undefined {
     }).trim()
     /* v8 ignore next -- detached-HEAD behavior is exercised by the runtime smoke, not the unit checkout. */
     return branch === '' ? undefined : branch
-  } catch (_gitUnavailableOrOutsideWorktree) {
+  } catch {
     return undefined
   }
 }

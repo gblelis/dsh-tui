@@ -195,6 +195,7 @@ export class TuiPromptService extends Service {
       // re-check liveness: a listener that synchronously unsubscribes another
       // observer earlier in the same burst must silence it now, keeping the
       // subscription set authoritative during reentrant notification.
+      // eslint-disable-next-line no-useless-spread -- snapshot: a listener may unsubscribe during delivery
       for (const record of [...this.listeners]) {
         if (this.listeners.has(record)) this.notifyOne(record.listener)
       }

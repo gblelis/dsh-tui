@@ -31,6 +31,7 @@ const palette = {
   selected: plain,
 } as unknown as Palette
 
+/* eslint-disable no-control-regex -- stripping terminal escape sequences is the job */
 /** Strip CSI/OSC so a golden only records layout, never colour. */
 function stripAnsi(text: string): string {
   return text

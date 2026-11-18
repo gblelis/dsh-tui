@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const cli = join(root, 'packages/cli/lib/bin.js')
 
+/* eslint-disable no-control-regex -- stripping terminal escape sequences is the job */
 /** Strip CSI and OSC sequences so assertions read the plain screen text. */
 function stripAnsi(text: string): string {
   return text

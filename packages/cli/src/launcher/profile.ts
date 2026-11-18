@@ -50,7 +50,7 @@ export async function readEmbeddedBundle(): Promise<EmbeddedBundle> {
   let text: string
   try {
     text = await readFile(path, 'utf8')
-  } catch (error: unknown) {
+  } catch {
     throw new LauncherError(
       `the embedded dsh-tui bundle is missing (${path})`,
       'Reinstall the package: npm install -g @gblelis/dsh-tui@latest.',
@@ -255,7 +255,7 @@ export async function ensureProfile(paths: ResolvedPaths, dshVersion?: string): 
     let parsed: unknown
     try {
       parsed = JSON.parse(await readFile(manifestPath, 'utf8'))
-    } catch (error: unknown) {
+    } catch {
       throw new LauncherError(
         `the dsh profile manifest is not valid JSON: ${manifestPath}`,
         `Fix or remove that file; dsh-tui will recreate it on the next run.`,
