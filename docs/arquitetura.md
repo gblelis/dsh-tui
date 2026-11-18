@@ -154,4 +154,18 @@ Desktop/Web, e vice-versa. `cwd`, `parentSession`, `isSeeded` e `origin` são re
 | `packages/bundle/src/extension/*` | overlays e tipos de extensão |
 | `packages/bundle/cordis.patch.yml` | a camada: persona, sessão, tui, tool-ask-user, session-reference, tmux-context |
 | `patches/*.patch` | patch de build do pi-tui |
+| `packages/bundle/tests/*.spec.ts` | unitários das partes puras; `__snapshots__` guarda as golden screens |
 | `scripts/{verify-compat,check-package}.ts` | gates de compatibilidade e de pacote |
+| `scripts/{screen,chat,install}-smoke.ts` | smokes de tela, conversa (mock do modelo) e instalação via npm |
+| `tests/pty.spec.ts` | boot real sob PTY (`script(1)`); auto-skip onde não há PTY |
+
+### Portões
+
+| Comando | O que prova |
+| --- | --- |
+| `pnpm test` | comportamento puro + golden screens (layout versionado) |
+| `pnpm compat` | 11 checagens de API/versão contra o dsh pinado |
+| `pnpm verify:package` | conteúdo e metadados do tarball que iria ao npm |
+| `pnpm smoke:screen` | o profile compõe e a TUI renderiza num terminal de verdade (headless) |
+| `pnpm smoke:chat` | prompt → stream → tool card real → `/export` → `/permissions` → `/login` → retomada |
+| `pnpm smoke:install` | `npm pack` → `npm install -g` → boot do binário instalado |
