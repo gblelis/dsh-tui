@@ -17,6 +17,8 @@ Terminal front end for DeepSeek Harness, shipped as one npm package
 - **TUI** ported to the published `0.2.2-rc.5` API: streaming transcript, tool cards with diffs, reasoning
   toggle, per-phase timing, token/context footer, multiline editor with history and completion, model and
   permission selection, session resume picker, question dialogs, `/skill:` invocation.
+- **`/export [path]`**: write the session as a Markdown transcript (human messages, replies, tool calls and
+  results; synthetic model-only context omitted) with collision-safe default file names.
 - **Sessions**: new (`session-<uuid>`), `--continue`, `--resume <id>`, `--session-id`, `/resume` handoff;
   adopts existing V4 sessions and refuses subagent or foreign-`cwd` sessions with a clear message.
 - **Verification**: unit suites (launcher semantics, tokens, timing, prompt templates, config), a headless

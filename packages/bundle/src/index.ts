@@ -20,7 +20,11 @@ import {
   type SlashCommand,
   type TerminalColorScheme,
 } from '@earendil-works/pi-tui'
+import { existsSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
 import { captureTerminalFromEnv } from './testing/capture-terminal.ts'
+import { exportFileName, renderSessionMarkdown } from './chat/export.ts'
 import { Service, type Context, type Fiber } from '@deepseek-ai/cordis'
 import {
   assembleContextFor,
@@ -1341,6 +1345,32 @@ export function createTuiChat(
       name: 'resume',
       description: 'List this workspace\'s resumable sessions',
       handler: () => { resume.showResume(); return { kind: 'success' } },
+    })
+    commandCtx.commands.register({
+      name: 'export',
+      description: 'Write this session as a Markdown transcript',
+      input: { hint: '[path]' },
+      handler: async ({ rawInput }) => {
+        const requested = rawInput.trim()
+        const file = requested === ''
+          ? join(cwd, exportFileName(new Date(), name => existsSync(join(cwd, name))))
+          : resolve(cwd, requested)
+        const header = agent.session.header
+        const events = agent.session.snapshotEvents()
+        const visible = new Set<number>(agent.session.surface.nodes.map(seq => Number(seq)))
+        const markdown = renderSessionMarkdown(events, visible, {
+          sessionId: String(agent.session.id),
+          cwd: header.cwd ?? cwd,
+          ...sessionTitle === undefined ? {} : { title: sessionTitle },
+          createdAt: new Date(header.createdAt),
+          exportedAt: new Date(),
+        })
+        await mkdir(dirname(file), { recursive: true })
+        await writeFile(file, markdown, 'utf8')
+        appendNotice(`Exported this session to ${file}`, 'info')
+        requestRender()
+        return { kind: 'success' }
+      },
     })
     commandCtx.commands.register({
       name: 'status',

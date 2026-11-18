@@ -38,7 +38,7 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | Smoke de tela: boot real + renderização conferida no xterm (headless) | ✅ `pnpm smoke:screen` |
 | Smoke de conversa: prompt digitado, stream do modelo e transcript conferidos | ✅ `pnpm smoke:chat` |
 | Testes com PTY de verdade e snapshots ricos (cards, diffs, diálogos) | 🚧 próxima etapa |
-| `/export`, `/permissions`, `/login`, linha de MCP no profile | 🚧 roadmap |
+| `/permissions` interativo, `/login`, linha de MCP no profile | 🚧 roadmap |
 
 O profile foi composto e validado com `dsh 0.2.2-rc.5` (`--dump-config`), e o boot real é exercitado de
 ponta a ponta por dois smokes: o bundle sabe gravar o que a TUI escreveria (`DSH_TUI_CAPTURE_OUTPUT`,

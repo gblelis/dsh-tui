@@ -40,7 +40,7 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | `/reload` (hot reload experimental) | ✅ |
 | Tema claro/escuro, truecolor por `COLORTERM` | ✅ |
 | Painel de todos, overlay de diffs | ✅ |
-| Exportar conversa (`/export`) | 🚧 |
+| Exportar conversa (`/export [caminho]`, Markdown) | ✅ |
 | `/permissions` interativo | 🚧 (por flag `--permission-mode`) |
 | `/login` / OAuth no terminal | 🚧 (use env/`.env`/Desktop) |
 

@@ -12,7 +12,7 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -64,7 +64,7 @@ async function render(raw: string): Promise<string> {
  */
 function runTui(args: string[], env: NodeJS.ProcessEnv, timeoutMs: number): Promise<{ status: number | null; stderr: string }> {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, args, { env, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(process.execPath, args, { cwd: home, env, stdio: ['ignore', 'pipe', 'pipe'] })
     let stderr = ''
     child.stderr.setEncoding('utf8')
     child.stderr.on('data', (chunk: string) => { stderr += chunk })
@@ -147,6 +147,9 @@ const result = await runTui([runtime.bin, '--profile', 'tui', '--new'], {
       // paste, and the editor keeps the trailing Enter as text.
       ...PROMPT.split('').map((char, index) => ({ afterMs: typingDelay + index * 25, data: char })),
       { afterMs: typingDelay + PROMPT.length * 25 + 200, data: CR },
+      // The mock answers immediately; export the transcript once it landed.
+      ...'/export'.split('').map((char, index) => ({ afterMs: typingDelay + 4000 + index * 25, data: char })),
+      { afterMs: typingDelay + 4000 + '/export'.length * 25 + 200, data: CR },
       { afterMs: exitDelay, data: CTRL_D },
     ]),
   }, exitDelay + 40_000)
@@ -169,6 +172,18 @@ if (result.status !== 0) failures.push(`the TUI exited with ${String(result.stat
 if (!screen.includes(PROMPT)) failures.push('the user message is missing from the transcript')
 if (!screen.includes(REPLY)) failures.push('the streamed assistant reply is missing from the transcript')
 if (/LlmFailure|NO_ADAPTER/u.test(screen)) failures.push('the transcript reports a model error')
+
+// Phase 1b: /export must write a Markdown transcript of what was just shown,
+// into the session workspace (the child runs with cwd set to the temp home).
+const exported = readdirSync(home).filter(name => name.startsWith('dsh-transcript-') && name.endsWith('.md'))
+if (exported.length === 0) {
+  failures.push('/export wrote no transcript file')
+} else {
+  const markdown = readFileSync(join(home, exported[0]), 'utf8')
+  if (!markdown.includes(PROMPT)) failures.push('/export transcript is missing the user message')
+  if (!markdown.includes(REPLY)) failures.push('/export transcript is missing the reply')
+  if (!screen.includes('Exported this session to')) failures.push('/export did not confirm the path in the transcript')
+}
 
 // Phase 2: reopening with --continue must land on the same session and show the
 // restored transcript, including the reply the mock streamed in phase 1.
