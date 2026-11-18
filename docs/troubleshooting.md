@@ -126,7 +126,7 @@ original (`cd` para ele) ou abra a sessão pelo Desktop/Web.
 ## Não consigo trocar permissões no meio da sessão
 
 Hoje o preset é aplicado no início (`--permission-mode read-only|workspace-write|danger-full-access`). A
-troca em tempo real via `/permissions` está no roadmap; até lá, saia e reabra com a flag.
+troca em tempo real com `/permissions` (seletor ou `/permissions <preset>`), sem reiniciar.
 
 ## `pnpm install` do repositório falha com peers do DSH
 

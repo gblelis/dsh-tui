@@ -82,12 +82,6 @@ plugins; o launcher só substitui `node_modules/@gblelis/dsh-tui-bundle`.
       You are a coding agent powered by the {{model}} model. Respond in Portuguese.
 ```
 
-### Habilitar MCP (quando a linha existir)
-
-O gerenciador de MCP ainda não é ligado por padrão neste release (ver `docs/paridade.md`). Quando estiver,
-será uma linha única apontando para `@deepseek-ai/dsh-mcp-manager`, e os servidores continuarão vindo das
-configurações do DSH — nada específico do terminal.
-
 ## O que o bundle cuida sozinho
 
 | Linha | Função |

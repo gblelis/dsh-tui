@@ -58,16 +58,18 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 
 ## Decisões de paridade já tomadas
 
-- **`/export` será local**: o comando `session-log-export` do core depende do `Connection` do Web; o CLI
-  grava markdown/JSON da sessão direto no disco (roadmap).
-- **`/permissions`**: o preset é aplicado no início via `--permission-mode`; a troca no meio da sessão
-  usará `ctx.permissionPresets.set` com um seletor (roadmap). Hoje dá para sair e reabrir com a flag, ou
-  deixar o modelo pedir confirmação (fluxo normal de permissões do core).
+- **`/export` é local**: o comando `session-log-export` do core depende do `Connection` do Web; o CLI grava
+  Markdown da sessão direto no disco (`/export [caminho]`), sem passar por servidor.
+- **`/permissions`**: o preset é aplicado no início via `--permission-mode` e trocado a qualquer momento com
+  `/permissions` (seletor ou `/permissions <preset>`), usando `ctx.permissionPresets.set` — o mesmo caminho
+  durável do Web/Desktop.
 - **Credenciais**: o fluxo OAuth do Desktop não é reproduzido; o CLI lê a mesma credencial salva pelo
   Desktop (`$DSH_HOME/.credentials.yaml`) e aceita `DEEPSEEK_API_KEY`/`.env`. Quem nunca configurou o
-  Desktop usa a variável de ambiente — é o mesmo contrato do modo headless do DSH.
-- **MCP**: o core já tem cliente/gerenciador; falta apenas ligar a linha no profile. Enquanto isso, MCP
-  configurado nas outras superfícies não aparece no terminal (roadmap; ver `docs/plugins.md`).
+  Desktop usa a variável de ambiente — é o mesmo contrato do modo headless do DSH. `/login` grava a chave
+  nesse mesmo store, num prompt mascarado.
+- **MCP**: o terminal usa o `@deepseek-ai/dsh-mcp-client`, o mesmo cliente do ACP, configurado na camada do
+  usuário (stdio ou Streamable HTTP). Nenhum servidor vem ligado por padrão e um servidor fora do ar não
+  impede o boot; as ferramentas aparecem como `mcp__<server>__<tool>` (ver `docs/plugins.md`).
 
 ## O que nunca vai divergir
 
