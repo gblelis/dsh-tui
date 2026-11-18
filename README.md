@@ -194,7 +194,7 @@ Decisões que sustentam a compatibilidade:
    retomado no Desktop/Web (e vice-versa).
 
 Detalhes: [arquitetura](docs/arquitetura.md) · [compatibilidade](docs/compatibilidade.md) ·
-[paridade](docs/paridade.md) · [porting/PROVENANCE](docs/porting/PROVENANCE.md).
+[paridade](docs/paridade.md) · [publicação](docs/publicacao.md) · [porting/PROVENANCE](docs/porting/PROVENANCE.md).
 
 ---
 
@@ -217,7 +217,7 @@ Layout:
 | `packages/bundle/` | o *bundle* Cordis (privado, nunca publicado): TUI, startup, prompt-service, patch |
 | `packages/cli/` | o pacote publicado `@gblelis/dsh-tui`: launcher + artefato do bundle embutido |
 | `patches/` | patch do `@earendil-works/pi-tui` (frame sem borda, prompt customizado, word-wrap) |
-| `docs/` | arquitetura, instalação, compatibilidade, paridade, keybindings, troubleshooting |
+| `docs/` | arquitetura, instalação, compatibilidade, paridade, publicação, keybindings, troubleshooting |
 | `upstream/` | checkout do DSH na tag `dsh-v0.2.2-rc.5` (submódulo, só referência) |
 
 Depois de mudar o bundle: `pnpm --filter @gblelis/dsh-tui-bundle build && pnpm --filter @gblelis/dsh-tui build`.

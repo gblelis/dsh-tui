@@ -24,6 +24,8 @@ Terminal front end for DeepSeek Harness, shipped as one npm package
 - **Tool-card smoke**: the chat smoke's second turn scripts a real `bash` call through the mock model, so the
   rendered card (header, command, output, exit status) is asserted end to end; the scripted title request is
   disabled so it cannot consume the tool-call entry.
+- **Release**: `docs/publicacao.md` documents the version bump, gates, tag-triggered publish with provenance,
+  and the manual path; `prepublishOnly` rebuilds the workspace so the tarball is never stale.
 - **Install smoke**: `pnpm smoke:install` packs the CLI, installs the tarball with npm into a clean prefix and
   boots the installed binary, so the published artifact is verified as a user receives it.
 - **`/login`**: masked prompt that stores the DeepSeek API key through the credentials service (the same

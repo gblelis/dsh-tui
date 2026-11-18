@@ -25,7 +25,8 @@
   },
   "scripts": {
     "build": "tsdown && tsx ./scripts/embed-bundle.ts",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "prepublishOnly": "pnpm --dir ../.. build"
   },
   "dependencies": {
     "@deepseek-ai/dsh": "0.2.2-rc.5"

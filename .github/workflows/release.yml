@@ -16,6 +16,7 @@ concurrency:
 
 permissions:
   contents: write # GitHub release
+  id-token: write # npm provenance (OIDC)
 
 jobs:
   publish:
@@ -60,6 +61,11 @@ jobs:
             exit 1
           fi
 
+      # The tarball is exactly what the release installs from, so verify it the
+      # same way a user would before anything is published.
+      - name: Install smoke
+        run: pnpm smoke:install
+
       - name: Publish to npm
         if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
         working-directory: packages/cli
@@ -80,10 +86,12 @@ jobs:
             Terminal front end for DeepSeek Harness.
 
             ```bash
-            npm install -g @gblelis/dsh-tui@${{ github.ref_name }}
+            npm install -g @gblelis/dsh-tui
             dsh-tui doctor
             dsh-tui
             ```
+
+            This tag is also installable exactly as `@gblelis/dsh-tui@<version>`.
 
             Requires Node.js >= 24.9 and a real terminal. This release targets
             `@deepseek-ai/dsh` `^0.2.2-rc.5`; `dsh-tui doctor` reports skew.
