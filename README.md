@@ -39,7 +39,8 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | Smoke de tela: boot real + renderização conferida no xterm (headless) | ✅ `pnpm smoke:screen` |
 | Smoke de conversa: prompt, stream, tool card real (bash), `/export`, `/permissions`, `/login` e retomada | ✅ `pnpm smoke:chat` |
 | Smoke de instalação: `npm pack` → `npm install -g` → boot do binário instalado | ✅ `pnpm smoke:install` |
-| Testes com PTY de verdade e snapshots ricos (cards, diffs, diálogos) | 🚧 próxima etapa |
+| PTY real no CI e testes do tool card e do renderizador de diffs | ✅ |
+| Golden screens gravadas de diffs/diálogos em CI | 🚧 próxima etapa |
 
 O profile foi composto e validado com `dsh 0.2.2-rc.5` (`--dump-config`), e o boot real é exercitado de
 ponta a ponta por dois smokes: o bundle sabe gravar o que a TUI escreveria (`DSH_TUI_CAPTURE_OUTPUT`,

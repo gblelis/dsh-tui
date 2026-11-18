@@ -55,7 +55,8 @@ function pretty(value: unknown): string {
   return displayText(serialized ?? String(value))
 }
 
-interface RenderedDiff {
+/** One rendered file diff: display lines plus exact or approximate change totals. */
+export interface RenderedDiff {
   lines: string[]
   added: number
   removed: number
@@ -78,7 +79,7 @@ function diffContentLines(text: string): string[] {
  * change totals. Comparisons beyond the edit-distance budget fall back to
  * whole-side rendering so a model-authored pending edit cannot stall the TUI.
  */
-function renderDiff(diff: FileDiff, maxDiffEditLength: number, palette: Palette): RenderedDiff {
+export function renderDiff(diff: FileDiff, maxDiffEditLength: number, palette: Palette): RenderedDiff {
   // The card header is a fixed `Tool / <name>` frame that never names a file, so
   // each hunk always carries its own path header (no redundancy to suppress).
   const lines = [palette.bold(displayText(diff.path))]

@@ -21,6 +21,8 @@ Terminal front end for DeepSeek Harness, shipped as one npm package
   results; synthetic model-only context omitted) with collision-safe default file names.
 - **`/permissions [preset]`**: selector overlay that marks the active preset and switches it through the
   session's durable knob setters, plus a direct argument form for scripting.
+- **Diff renderer tests**: the transcript's `renderDiff` is unit-covered for new files, exact edits, the
+  approximate fallback, and the trailing-newline terminator rule.
 - **Tool-card smoke**: the chat smoke's second turn scripts a real `bash` call through the mock model, so the
   rendered card (header, command, output, exit status) is asserted end to end; the scripted title request is
   disabled so it cannot consume the tool-call entry.
