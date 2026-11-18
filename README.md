@@ -227,6 +227,9 @@ hash com o stamp do profile e reinstala sozinho.
 
 Não edite `packages/cli/bundle/` nem `packages/*/lib/` à mão: são saídas de build.
 
+Regras de arquitetura, tarefas comuns (novo comando, novo plugin, goldens, subir o dsh alvo) e checklist
+de PR estão em [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ---
 
 ## Publicação
