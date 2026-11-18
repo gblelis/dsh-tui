@@ -103,7 +103,7 @@ async function screenOf(file: string): Promise<string> {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const args = process.argv.slice(2)
 const typingDelay = Number(option(args, 'typing-delay', '6000'))
-const exitDelay = Number(option(args, 'exit-delay', '16000'))
+const exitDelay = Number(option(args, 'exit-delay', '20000'))
 const PROMPT = 'hello there'
 const outFile = option(args, 'out', '')
 const home = mkdtempSync(join(tmpdir(), 'dsh-tui-screen-'))
@@ -150,6 +150,10 @@ const result = await runTui([runtime.bin, '--profile', 'tui', '--new'], {
       // The mock answers immediately; export the transcript once it landed.
       ...'/export'.split('').map((char, index) => ({ afterMs: typingDelay + 4000 + index * 25, data: char })),
       { afterMs: typingDelay + 4000 + '/export'.length * 25 + 200, data: CR },
+      // The selector itself has unit coverage; here the argument path proves
+      // the command reaches the preset service and reports the switch.
+      ...'/permissions danger-full-access'.split('').map((char, index) => ({ afterMs: typingDelay + 6000 + index * 25, data: char })),
+      { afterMs: typingDelay + 6000 + '/permissions danger-full-access'.length * 25 + 200, data: CR },
       { afterMs: exitDelay, data: CTRL_D },
     ]),
   }, exitDelay + 40_000)
@@ -183,6 +187,7 @@ if (exported.length === 0) {
   if (!markdown.includes(PROMPT)) failures.push('/export transcript is missing the user message')
   if (!markdown.includes(REPLY)) failures.push('/export transcript is missing the reply')
   if (!screen.includes('Exported this session to')) failures.push('/export did not confirm the path in the transcript')
+  if (!screen.includes('Permission preset:')) failures.push('/permissions did not confirm the switch in the transcript')
 }
 
 // Phase 2: reopening with --continue must land on the same session and show the

@@ -41,7 +41,7 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | Tema claro/escuro, truecolor por `COLORTERM` | ✅ |
 | Painel de todos, overlay de diffs | ✅ |
 | Exportar conversa (`/export [caminho]`, Markdown) | ✅ |
-| `/permissions` interativo | 🚧 (por flag `--permission-mode`) |
+| `/permissions` interativo (seletor + argumento) | ✅ (também na flag `--permission-mode`) |
 | `/login` / OAuth no terminal | 🚧 (use env/`.env`/Desktop) |
 
 ## Itens só de Desktop/Web (por design)

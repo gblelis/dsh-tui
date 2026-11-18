@@ -58,6 +58,7 @@ motivo (`aborted`, `interrupted`, `error`, `max-tokens`).
 | Pergunta de texto livre | digite, `Enter` envia |
 | Seletor de modelo (`/model`) | `↑`/`↓`, `Enter` confirma, `Esc` volta, digite para filtrar |
 | Lista de sessões (`/resume`) | `↑`/`↓`, `Enter` reabre (reexecuta com `--resume <id>`), `Esc` fecha |
+| Presets de permissão (`/permissions`) | `↑`/`↓`, `Enter` aplica na hora, `Esc` fecha; `/permissions <preset>` troca direto |
 | Ajuda (`/help`) | `Esc` fecha |
 | Paleta (`/palette`) | `Esc` fecha |
 

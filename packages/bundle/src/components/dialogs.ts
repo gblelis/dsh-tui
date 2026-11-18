@@ -1242,3 +1242,62 @@ export class QuestionDialog implements Component, Focusable {
     }
   }
 }
+
+/** One permission preset row shown by the permissions selector. */
+export interface PermissionChoice {
+  /** Stable preset key sent back to the permission service. */
+  value: string
+  /** Display label. */
+  name: string
+  /** One-line explanation of the preset. */
+  description?: string
+}
+
+/**
+ * Permission-preset selector: Enter switches the session's preset, Esc closes.
+ * The active preset is marked in its label so the dialog doubles as the answer
+ * to "what am I running with?".
+ */
+export class PermissionsDialog implements Component {
+  private readonly list: SelectList
+
+  constructor(
+    choices: readonly PermissionChoice[],
+    current: string,
+    private readonly palette: Palette,
+    apply: (value: string) => void,
+    private readonly closeDialog: () => void,
+  ) {
+    this.list = new SelectList(
+      choices.map(choice => ({
+        value: choice.value,
+        label: choice.value === current ? `${choice.name} (current)` : choice.name,
+        ...choice.description === undefined ? {} : { description: choice.description },
+      })),
+      Math.max(1, Math.min(choices.length, 8)),
+      dialogSelectTheme(palette),
+    )
+    this.list.onSelect = () => {
+      const item = this.list.getSelectedItem()
+      if (item !== null) apply(item.value)
+    }
+  }
+
+  invalidate(): void {
+    this.list.invalidate()
+  }
+
+  handleInput(data: string): void {
+    if (matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl('c'))) this.closeDialog()
+    else this.list.handleInput(data)
+    this.invalidate()
+  }
+
+  render(width: number): string[] {
+    return renderDialog('Permission preset', [
+      ...this.list.render(Math.max(1, width - 4)),
+      '',
+      this.palette.dim('↑/↓ move • Enter switch • Esc close'),
+    ], width, this.palette)
+  }
+}

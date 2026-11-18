@@ -19,6 +19,8 @@ Terminal front end for DeepSeek Harness, shipped as one npm package
   permission selection, session resume picker, question dialogs, `/skill:` invocation.
 - **`/export [path]`**: write the session as a Markdown transcript (human messages, replies, tool calls and
   results; synthetic model-only context omitted) with collision-safe default file names.
+- **`/permissions [preset]`**: selector overlay that marks the active preset and switches it through the
+  session's durable knob setters, plus a direct argument form for scripting.
 - **Sessions**: new (`session-<uuid>`), `--continue`, `--resume <id>`, `--session-id`, `/resume` handoff;
   adopts existing V4 sessions and refuses subagent or foreign-`cwd` sessions with a clear message.
 - **Verification**: unit suites (launcher semantics, tokens, timing, prompt templates, config), a headless

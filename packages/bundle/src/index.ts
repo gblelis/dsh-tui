@@ -31,6 +31,7 @@ import {
   type Agent,
   type AgentStatus,
 } from '@deepseek-ai/dsh-agent'
+import type { PermissionPresetService, PresetOption } from '@deepseek-ai/dsh-permission-presets'
 import type {} from '@deepseek-ai/dsh-token-meter'
 import type { CommandResult } from '@deepseek-ai/dsh-commands'
 import { createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
@@ -109,6 +110,7 @@ import {
 import {
   compactTargetLabel,
   DetailsDialog,
+  PermissionsDialog,
   diagnosticMeter,
   formatDiagnosticCount,
   formatDiagnosticNumber,
@@ -1082,6 +1084,58 @@ export function createTuiChat(
 
   const toggleReasoning = (): void => { setReasoning(!showReasoning) }
 
+  // Permission presets are process-level catalog entries, but the switch is a
+  // session fact: the command writes the preset through the session's durable
+  // knob setters, exactly like the Web and Desktop selectors do.
+  let permissionOverlay: TuiOverlaySession | undefined
+  const runPermissionCommand = (raw: string): void => {
+    const permissions = ctx.get('permissionPresets') as PermissionPresetService | undefined
+    if (permissions === undefined) {
+      appendNotice('This profile has no permission preset service.', 'warning')
+      return
+    }
+    const catalog = permissions.catalog()
+    const current = permissions.current(agent.session)
+    const select = (value: string): void => {
+      const option = catalog.options.find((entry: PresetOption) => entry.value === value)
+      if (option === undefined) {
+        appendNotice(`Unknown permission preset: ${value}. Run /permissions to list them.`, 'warning')
+        return
+      }
+      try {
+        permissions.set(agent.session, option.value)
+        appendNotice(`Permission preset: ${option.name}.`, 'info')
+        requestRender()
+      } catch (error: unknown) {
+        appendNotice(`Could not switch permission preset: ${errorChain(error)}`, 'error')
+      }
+    }
+    const argument = raw.trim()
+    if (argument !== '') {
+      select(argument)
+      return
+    }
+    void permissionOverlay?.close()
+    const session = overlayManager.open({
+      create: () => new PermissionsDialog(
+        catalog.options,
+        current,
+        palette,
+        (value: string) => {
+          void session.close()
+          select(value)
+        },
+        () => { void session.close() },
+      ),
+      options: { width: resolved.detailsDialogWidth, maxHeight: 14, anchor: 'center', margin: 1 },
+    })
+    permissionOverlay = session
+    void session.closed.then(() => {
+      if (permissionOverlay === session) permissionOverlay = undefined
+    })
+    requestRender()
+  }
+
   // The selector and the argument grammar mutate the same closure state the
   // Ctrl+O cycle and Ctrl+R toggle drive, so every entry converges.
   let detailsOverlay: TuiOverlaySession | undefined
@@ -1369,6 +1423,15 @@ export function createTuiChat(
         await writeFile(file, markdown, 'utf8')
         appendNotice(`Exported this session to ${file}`, 'info')
         requestRender()
+        return { kind: 'success' }
+      },
+    })
+    commandCtx.commands.register({
+      name: 'permissions',
+      description: 'Show or switch this session\'s permission preset',
+      input: { hint: '[preset]' },
+      handler: ({ rawInput }) => {
+        runPermissionCommand(rawInput)
         return { kind: 'success' }
       },
     })
