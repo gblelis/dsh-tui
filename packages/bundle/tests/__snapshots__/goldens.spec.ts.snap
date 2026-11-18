@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`diff golden > renders a created file 1`] = `
+"notes/todo.md
++ # todo
++
++ - write the TUI
++ - publish 0.1.0"
+`;
+
+exports[`diff golden > renders an edit with both sides 1`] = `
+"src/greeting.ts
+- export const greeting = "hello"
++ export const greeting = "hello, world""
+`;
+
+exports[`login prompt golden > masks the secret and names the keys 1`] = `
+"╭ DeepSeek API key ────────────────────────────────────────────────────────────╮
+│  •••••••••••                                                                 │
+│                                                                              │
+│ Stored through the credentials service; the key never enters the transcript. │
+│ Enter store • Esc cancel                                                     │
+╰──────────────────────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`permission selector golden > marks the active preset and keeps the key hints 1`] = `
+"╭ Permission preset ─────────────────────────────────────────────────╮
+│ → workspace-write (current)       workspace-write sandbox with a   │
+│   danger-full-access              no sandbox, never asks           │
+│                                                                    │
+│ ↑/↓ move • Enter switch • Esc close                                │
+╰────────────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`transcript details golden > renders both toggle rows with their values 1`] = `
+"╭ Transcript details ────────────────────────────────────────────────╮
+│ → Tool cards                      collapsed                        │
+│   Reasoning                       hidden                           │
+│                                                                    │
+│ ↑/↓ move • Tab toggle • Enter/Esc close                            │
+╰────────────────────────────────────────────────────────────────────╯"
+`;
