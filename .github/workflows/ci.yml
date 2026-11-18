@@ -65,6 +65,12 @@ jobs:
       - name: Chat smoke (scripted prompt against a local model server)
         run: pnpm smoke:chat
 
+      # The other smokes replace the terminal; this one drives the real
+      # ProcessTerminal through script(1). It skips itself where no PTY exists.
+      - name: PTY boot (ubuntu only: util-linux script)
+        if: runner.os == 'Linux'
+        run: pnpm vitest run tests/pty.spec.ts
+
       - name: Smoke (launcher, no TTY)
         run: |
           set -euo pipefail
