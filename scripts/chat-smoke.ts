@@ -76,6 +76,30 @@ function runTui(args: string[], env: NodeJS.ProcessEnv, timeoutMs: number): Prom
   })
 }
 
+/** Environment for one captured TUI run: same home and model endpoint. */
+function captureEnv(output: string, input: readonly { afterMs: number; data: string }[]): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    DSH_HOME: home,
+    DEEPSEEK_API_KEY: 'sk-smoke',
+    DEEPSEEK_BASE_URL: model.baseURL,
+    DSH_TELEMETRY_DISABLED: '1',
+    DSH_TUI_CAPTURE_OUTPUT: output,
+    DSH_TUI_CAPTURE_COLUMNS: String(COLUMNS),
+    DSH_TUI_CAPTURE_ROWS: String(ROWS),
+    DSH_TUI_CAPTURE_INPUT: JSON.stringify(input),
+  }
+}
+
+/** Render one capture file, or throw with the child's stderr. */
+async function screenOf(file: string): Promise<string> {
+  try {
+    return await render(readFileSync(file, 'utf8'))
+  } catch {
+    throw new Error(`the TUI never wrote a frame to ${file}`)
+  }
+}
+
 const root = fileURLToPath(new URL('..', import.meta.url))
 const args = process.argv.slice(2)
 const typingDelay = Number(option(args, 'typing-delay', '6000'))
@@ -105,7 +129,7 @@ const model = await startMockLlmServer({ sequence: ['success'], successText: REP
 // Point the DeepSeek adapter row at the local Messages server. The profile
 // user layer merges `config` into an existing row, so this needs no new plugin.
 writeFileSync(join(home, 'profiles', 'tui', 'cordis.patch.yml'),
-  '- id: llm-deepseek\n  config:\n    baseURL: http://127.0.0.1:' + String(MOCK_PORT) + '\n- id: authorization\n  disabled: true\n- id: deepseek-account\n  disabled: true\n- id: credentials\n  disabled: true\n')
+  '- id: llm-deepseek\n  config:\n    baseURL: http://127.0.0.1:' + String(MOCK_PORT) + '\n')
 
 const rawFile = join(home, 'screen.raw')
 const errorsFile = join(home, 'stderr.log')
@@ -146,10 +170,29 @@ if (!screen.includes(PROMPT)) failures.push('the user message is missing from th
 if (!screen.includes(REPLY)) failures.push('the streamed assistant reply is missing from the transcript')
 if (/LlmFailure|NO_ADAPTER/u.test(screen)) failures.push('the transcript reports a model error')
 
+// Phase 2: reopening with --continue must land on the same session and show the
+// restored transcript, including the reply the mock streamed in phase 1.
+const sessionId = /session-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/u.exec(screen)?.[0]
+if (sessionId === undefined) {
+  failures.push('the banner does not show a session id')
+} else {
+  for (const flags of [['--continue'], ['--resume', sessionId]] as const) {
+    const label = flags.join(' ')
+    const output = join(home, 'screen-' + flags[0].replace(/^--/u, '') + '.raw')
+    const resumed = await runTui([runtime.bin, '--profile', 'tui', ...flags], captureEnv(output, [{ afterMs: 7000, data: CTRL_D }]), 60_000)
+    const resumedScreen = await screenOf(output)
+    writeFileSync(join(home, 'screen-' + flags[0].replace(/^--/u, '') + '.txt'), resumedScreen + '\n')
+    if (resumed.status !== 0) failures.push(`${label} exited with ${String(resumed.status)}; stderr:\n${resumed.stderr}`)
+    if (!resumedScreen.includes(sessionId)) failures.push(`${label} did not reopen session ${sessionId}`)
+    if (!resumedScreen.includes(PROMPT)) failures.push(`${label} did not restore the previous user message`)
+    if (!resumedScreen.includes(REPLY)) failures.push(`${label} did not restore the previous reply`)
+  }
+}
+
 if (failures.length > 0) {
   process.stderr.write(`\nchat smoke failed:\n${failures.map(line => `  ✗ ${line}`).join('\n')}\n`)
   process.exitCode = 1
 } else {
-  process.stdout.write('\nchat smoke passed\n')
+  process.stdout.write('\nchat smoke passed (new, --continue, --resume)\n')
 }
 void root
