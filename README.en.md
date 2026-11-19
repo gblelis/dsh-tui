@@ -11,6 +11,10 @@ terminal, with no server and no browser.
 - **Compatible by construction**: the bundle declares `engines.dsh` and compiles against published DSH APIs,
   so tracking upstream is a dependency bump, not a rewrite.
 
+![dsh-tui startup panel](docs/assets/welcome.png)
+
+![An edit tool card with a diff and the assistant reply](docs/assets/tool-card.png)
+
 > Portuguese is this project's primary language: see the [README in Portuguese](README.md). The docs under
 > `docs/` are written in Portuguese.
 
@@ -78,8 +82,9 @@ Verified against `dsh 0.2.2-rc.5`. The chat surface is ported in full: streaming
 and diffs, collapsible tool cards, reasoning, per-phase timing, token/cache footer, `/model`,
 `/permissions`, `/resume`, `/status`, `/export`, `/login`, `ask_user_question`, `@session` references,
 skills (including bundled `dsh-doc`) and `/skill:`, prompt history, file/command autocomplete, scheduled
-tasks (`schedule_*`), and per-subagent model selection (`list_subagent_models`). Known host-side gaps are
-listed in the parity document.
+tasks (`schedule_*`), and per-subagent model selection (`list_subagent_models`). The startup screen is a
+bordered panel (model, directory/branch, permission preset, session, key hints) above a ruled composer;
+`--no-welcome` falls back to the compact header. Known host-side gaps are listed in the parity document.
 
 | Gate | What it proves |
 | --- | --- |

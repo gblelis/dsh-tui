@@ -101,7 +101,6 @@ import {
 import {
   ContextCardComponent,
   type ToolCardVisibility,
-  HeaderComponent,
   StreamingAssistantComponent,
   ToolCardComponent,
   TodoComponent,
@@ -127,10 +126,9 @@ import {
   renderSkillInvocation,
   SKILL_COMMAND_PREFIX,
 } from './chat/skill-invocation.ts'
+import { WelcomeComponent } from './components/welcome.ts'
 import { ReferenceAutocompleteProvider } from './chat/autocomplete.ts'
 import {
-  BANNER_REVEAL_INTERVAL_MS,
-  BANNER_REVEAL_STEPS,
   formatCwd,
   gitBranch,
   HintEditor,
@@ -313,7 +311,7 @@ export function createTuiChat(
     selectList: selectTheme(palette),
   } satisfies EditorTheme, {
     paddingX: 1,
-    frame: 'none',
+    frame: 'horizontal',
     prompt: {
       first: initialInputPrompt,
       continuation: ' '.repeat(visibleWidth(initialInputPrompt)),
@@ -381,31 +379,45 @@ export function createTuiChat(
   const agentStatus = (): AgentStatus => agent.status
   const isDisposed = (): boolean => disposed
 
-  // A configured subtitle renders as a banner line; when absent, the banner has
-  // no subtitle. The banner itself sweeps in on start (see startBannerReveal).
   let sessionTitle = foldSessionTitle(events)?.title
-  const header = new HeaderComponent(
-    agent,
-    () => sessionTitle ?? config.welcome,
-    palette,
-    resolved.theme.color && resolved.theme.truecolor,
-  )
   const formattedCwd = displayText(runtime.formatCwd?.(agent.session.header.cwd) ?? formatCwd(agent.session.header.cwd))
   const branch = runtime.gitBranch?.(cwd) ?? gitBranch(cwd)
+  // The startup panel reads live state on every frame, so `/model` and
+  // `/permissions` changes are reflected without extra invalidation.
+  const permissionPresets = ctx.get('permissionPresets') as PermissionPresetService | undefined
+  const header = new WelcomeComponent(
+    () => {
+      const selection = currentSelection()
+      return {
+        sessionId: agent.session.id,
+        model: selection === undefined ? undefined : compactTargetLabel(selection),
+        effort: selection?.reasoningEffort,
+        cwd: formattedCwd,
+        branch,
+        permission: permissionPresets?.current(agent.session),
+        tagline: sessionTitle ?? config.welcome,
+      }
+    },
+    palette,
+    resolved.theme.color && resolved.theme.truecolor,
+    config.showWelcome === false ? 'compact' : 'panel',
+  )
   const promptValues: TuiPromptValueHandle[] = [
     ctx.tuiPrompt.register('cwd', palette.bold(palette.accent(formattedCwd))),
     ctx.tuiPrompt.register('git/worktree', branch === undefined ? undefined : palette.dim(` (${displayText(branch)})`)),
     ctx.tuiPrompt.register('token_meter/cache_hit_rate'),
     ctx.tuiPrompt.register('model'),
+    ctx.tuiPrompt.register('permission'),
     ctx.tuiPrompt.register('context'),
     ctx.tuiPrompt.register('queued'),
     ctx.tuiPrompt.register('symbol', palette.bold(palette.accent('dsh'))),
     ctx.tuiPrompt.register('indicator', palette.dim('> ')),
   ]
-  const [cwdValue, gitValue, tokenValue, modelValue, contextValue, queuedValue, symbolValue, indicatorValue] = promptValues
+  const [cwdValue, gitValue, tokenValue, modelValue, permissionValue, contextValue, queuedValue, symbolValue, indicatorValue] = promptValues
   /* v8 ignore next -- the fixed built-in registration list always supplies each handle. */
   if (cwdValue === undefined || gitValue === undefined || tokenValue === undefined || modelValue === undefined
-    || contextValue === undefined || queuedValue === undefined || symbolValue === undefined || indicatorValue === undefined) {
+    || permissionValue === undefined || contextValue === undefined || queuedValue === undefined
+    || symbolValue === undefined || indicatorValue === undefined) {
     throw new Error('TUI prompt built-ins failed to initialize')
   }
   const updatePromptValues = (): void => {
@@ -416,6 +428,9 @@ export function createTuiChat(
     const usage = `↑${formatTokens(tokens.input)} ↓${formatTokens(tokens.output)}`
     const selection = currentSelection()
     modelValue.set(`  ${palette.dim(displayText(selection === undefined ? 'model unset' : compactTargetLabel(selection)))}`)
+    permissionValue.set(permissionPresets === undefined
+      ? undefined
+      : `  ${palette.dim(displayText(permissionPresets.current(agent.session)))}`)
     tokenValue.set(`  ${palette.dim(rate === undefined ? usage : `${usage}  cache ${rate}%`)}`)
     const contextWindow = modelController.contextWindow()
     contextValue.set(contextWindow === undefined ? undefined : `  ${palette.dim(
@@ -1859,7 +1874,6 @@ export function createTuiChat(
     disposeSkillChanges()
     disposePromptChanges()
     for (const value of promptValues) value.dispose()
-    stopBannerReveal()
     disposeSessionEvents()
     disposeClaimed()
     disposeInserted()
@@ -1869,34 +1883,6 @@ export function createTuiChat(
     disposeAgent()
     disposeSchemeListener()
     modelController.detach()
-  }
-
-  // Sweep reveal of the whole banner: the header wipes in left-to-right over
-  // ~BANNER_REVEAL_STEPS frames (started after `ui.start()` succeeds).
-  // Configured subtitles skip it so deployments (and snapshot fixtures) stay
-  // frame-deterministic.
-  let revealTimer: ReturnType<typeof setInterval> | undefined
-  const stopBannerReveal = (): void => {
-    if (revealTimer === undefined) return
-    clearInterval(revealTimer)
-    revealTimer = undefined
-    header.setRevealWidth(undefined)
-  }
-  const startBannerReveal = (): void => {
-    if (config.welcome !== undefined) return
-    const total = Math.max(1, runtime.terminal.columns)
-    const step = Math.max(1, Math.ceil(total / BANNER_REVEAL_STEPS))
-    let shown = 0
-    header.setRevealWidth(0)
-    revealTimer = setInterval(() => {
-      shown += step
-      if (shown >= total) {
-        stopBannerReveal()
-      } else {
-        header.setRevealWidth(shown)
-      }
-      requestRender()
-    }, BANNER_REVEAL_INTERVAL_MS)
   }
 
   rebuildTranscript(true)
@@ -1932,7 +1918,6 @@ export function createTuiChat(
   tuiServiceFiber = ctx.inject([], (serviceCtx) => {
     new TuiExtensionServiceImpl(serviceCtx, agent, overlayManager)
   })
-  startBannerReveal()
 
   // A launcher-seeded first turn (`dsh migrate`/`dsh upgrade`):
   // invoke the named skill exactly as a typed `/skill:<name>` would, once the

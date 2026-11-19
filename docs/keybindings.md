@@ -67,11 +67,12 @@ motivo (`aborted`, `interrupted`, `error`, `max-tokens`).
 O rodapé mostra:
 
 ```
-~/projeto (main) · deepseek-official/deepseek-v4-pro · high · 32% · 1.2k tok
+~/projeto (main)  deepseek-official/deepseek-v4-pro  workspace-write  ↑0 ↓0  32% context
 ```
 
 - caminho relativo ao home e branch git (quando dentro de um repositório);
 - modelo e esforço de raciocínio da sessão;
+- preset de permissão ativo (ausente quando o profile não monta `permissionPresets`);
 - uso do contexto (`%`) e tokens acumulados, com cache hit rate quando houver;
 - durante o turno: fase atual e tempo (`model wait 0.8s · response 2.1s`), e `N queued` quando há
   mensagens injetadas aguardando o próximo passo.

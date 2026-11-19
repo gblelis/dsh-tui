@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Startup panel**: a bordered welcome card above the transcript with the active model/effort, directory
+  and git branch, permission preset, session id and the keys worth knowing. It centres on wide terminals,
+  falls back to a two-line header below 46 columns, and is skipped by `--no-welcome`.
+- **Ruled composer and richer footer**: the editor draws its horizontal frame, and the footer prompt gained
+  the active permission preset (`${permission}`), so mode changes are visible without opening `/permissions`.
+- Unit tests for `WelcomeComponent` (layout, narrow fallback, live state, tagline) and a committed golden
+  screen for the panel.
+
+### Fixed
+
+- `--no-welcome` was parsed but had no effect on the renderer; the flag now selects the compact header.
+
 ## 0.1.0 — first end-to-end build
 
 Terminal front end for DeepSeek Harness, shipped as one npm package

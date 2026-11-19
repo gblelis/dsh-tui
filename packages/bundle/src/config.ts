@@ -97,7 +97,7 @@ const showHardwareCursorSchema = z.boolean().default(false)
 const colorSchema = z.boolean().default(true)
 // No default: an unset value auto-detects truecolor from COLORTERM in `apply`.
 const truecolorSchema = z.boolean()
-const DEFAULT_LEFT_PROMPT = '${cwd}${git/worktree}${model}${token_meter/cache_hit_rate}${context}'
+const DEFAULT_LEFT_PROMPT = '${cwd}${git/worktree}${model}${permission}${token_meter/cache_hit_rate}${context}'
 const DEFAULT_RIGHT_PROMPT = '${queued}'
 const DEFAULT_INPUT_PROMPT = '${symbol} ${indicator}'
 const DEFAULT_INPUT_PLACEHOLDER = 'press enter to steer and esc to cancel'
@@ -155,7 +155,7 @@ export interface Config extends TuiConfig {
   permissionMode?: string
   /** Skill name auto-invoked as this session's first user turn. */
   initialSkill?: string
-  /** Whether a fresh session offers the welcome overlay. Defaults to true. */
+  /** Whether a fresh session draws the welcome panel (false: compact header). Defaults to true. */
   showWelcome?: boolean
 }
 

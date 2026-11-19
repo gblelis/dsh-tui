@@ -10,6 +10,7 @@
 import { describe, expect, it } from 'vitest'
 import type { FileDiff } from '@deepseek-ai/dsh-tools'
 import { DetailsDialog, PermissionsDialog, SecretDialog } from '../src/components/dialogs.ts'
+import { WelcomeComponent } from '../src/components/welcome.ts'
 import { renderDiff } from '../src/components/transcript.ts'
 import type { Palette } from '../src/components/theme.ts'
 
@@ -91,5 +92,23 @@ describe('diff golden', () => {
 
   it('renders an edit with both sides', () => {
     expect(golden(renderDiff(edit, 1_000, palette).lines)).toMatchSnapshot()
+  })
+})
+
+describe('welcome panel golden', () => {
+  it('renders the startup card', () => {
+    const header = new WelcomeComponent(
+      () => ({
+        sessionId: 'session-1234-abcd',
+        model: 'deepseek-official/deepseek-flash',
+        effort: 'high',
+        cwd: '~/work/project',
+        branch: 'main',
+        permission: 'workspace-write',
+      }),
+      palette,
+      false,
+    )
+    expect(golden(header.render(100))).toMatchSnapshot()
   })
 })

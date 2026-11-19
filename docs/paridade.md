@@ -34,6 +34,7 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | Raciocínio do modelo (`Ctrl+R`) | ✅ |
 | Timing por fase (espera do modelo, thinking, resposta, tools) | ✅ |
 | Tokens e cache hit rate no rodapé | ✅ |
+| Tela inicial: painel de boas-vindas com modelo, diretório, preset e atalhos | ✅ (reskin; overlay original não portado) |
 | Editor multilinha com histórico, `Tab` e autocomplete de arquivos | ✅ |
 | Autocomplete de comandos e de referências de sessão | ✅ |
 | Diálogos de pergunta (`ask_user_question`) | ✅ |

@@ -96,8 +96,9 @@ O loader compõe as camadas de patch (base → bundles → camada do usuário) e
   quando o app fica pronto, se o serviço `tui` não existir, escreve um erro claro e sai com código 1.
   Isso cobre o caso em que o loader descarta a linha da TUI sem derrubar o processo.
 - **`tui-prompt`** (`src/prompt-service.ts`): serviço `tuiPrompt` que resolve as variáveis interpoladas
-  nos templates do tema — `${cwd}`, `${git/worktree}`, `${model}`, `${token_meter/cache_hit_rate}`,
-  `${context}`, `${queued}`, `${symbol}`, `${indicator}` — na linha de status e no rodapé, com
+  nos templates do tema — `${cwd}`, `${git/worktree}`, `${model}`, `${permission}`,
+  `${token_meter/cache_hit_rate}`, `${context}`, `${queued}`, `${symbol}`, `${indicator}` — na linha de
+  status e no rodapé, com
   notificações coalescidas por frame.
 - **`tui`** (`src/index.ts`): a interface. Não é um "front door" do agente: ele **possui** o agente da
   invocação:

@@ -40,3 +40,20 @@ exports[`transcript details golden > renders both toggle rows with their values 
 │ ↑/↓ move • Tab toggle • Enter/Esc close                            │
 ╰────────────────────────────────────────────────────────────────────╯"
 `;
+
+exports[`welcome panel golden > renders the startup card 1`] = `
+"        ╭──────────────────────────────────────────────────────────────────────────────────╮
+        │                                                                                  │
+        │ DEEPSEEK HARNESS                                                                 │
+        │ terminal front end for DeepSeek Harness                                          │
+        │                                                                                  │
+        │ model      deepseek-official/deepseek-flash · high                               │
+        │ directory  ~/work/project (main)                                                 │
+        │ permission workspace-write                                                       │
+        │ session    session-1234-abcd                                                     │
+        │                                                                                  │
+        │ /help commands · /model switch · /permissions presets · /login key               │
+        │ Ctrl+O tool cards · Ctrl+R reasoning · Esc cancel · Ctrl+D exit                  │
+        │                                                                                  │
+        ╰──────────────────────────────────────────────────────────────────────────────────╯"
+`;

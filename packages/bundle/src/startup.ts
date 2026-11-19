@@ -37,7 +37,7 @@ export interface TuiStartupValues {
   reasoningEffort?: string
   /** Permission preset applied before the first turn. */
   permissionMode?: string
-  /** Whether the welcome overlay is offered on a fresh session. */
+  /** Whether the welcome panel is offered on a fresh session. */
   showWelcome?: boolean
 }
 
@@ -68,7 +68,7 @@ function tuiCommand(): Command {
     .option('--model <[provider/]model>', 'initial model for this session')
     .option('--reasoning-effort <id>', 'initial reasoning effort for this session')
     .option('--permission-mode <preset>', 'permission preset to apply, e.g. read-only or workspace-write')
-    .option('--no-welcome', 'skip the welcome overlay on a fresh session')
+    .option('--no-welcome', 'skip the welcome panel on a fresh session (compact header)')
     .addHelpText('after', `
 Examples:
   dsh-tui                        fresh session in this working directory

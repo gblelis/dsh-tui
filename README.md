@@ -7,16 +7,9 @@ O DSH oficial só oferece Desktop e Web; o Web depende de um servidor HTTP, o qu
 máquina (bloqueios de rede/DeepSeek). O `dsh-tui` roda o **mesmo core** do DSH — mesmos agentes, mesmas
 ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e sem navegador.
 
-```
-┌─ ~/Dev/projeto ────────────────────────────── dsh-tui · deepseek-v4-pro ─┐
-│ ❯ refatore src/auth.ts e rode os testes                                   │
-│                                                                            │
-│ ⏺ Vou ler o arquivo e o teste existente.                                   │
-│   ▸ read  src/auth.ts                                    12 linhas  0.3s   │
-│   ▸ edit  src/auth.ts                                   +18 −6     0.5s     │
-│   ⏱ modelo 0.8s · resposta 2.1s                                           │
-└────────────────────────────────────────────────────────────────────────────┘
-```
+![Tela inicial do dsh-tui: painel com modelo, diretório, preset de permissão, sessão e atalhos](docs/assets/welcome.png)
+
+![Tool card de edição com diff e resposta do assistente](docs/assets/tool-card.png)
 
 - **Um binário**, um comando: `dsh-tui`.
 - **Core compartilhado**: o CLI não reimplementa o DSH. Ele instala um *profile* que carrega o
@@ -32,6 +25,7 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 | --- | --- |
 | Boot do profile + launcher (`install`, `sync`, `doctor`, `profile`, `runtime`, `version`, `print`) | ✅ verificado |
 | Chat completo: streaming, transcript, tool cards, diffs, raciocínio, timing por fase | ✅ portado |
+| Tela inicial: painel com modelo, diretório/branch, preset de permissão, sessão e atalhos; composer com régua dupla | ✅ |
 | Comandos `help`, `model`, `clear`, `details`, `palette`, `reload`, `resume`, `status`, `export`, `permissions`, `login`, `exit`/`quit` | ✅ |
 | Sessões: nova, `--continue`, `--resume [id]`, `--session-id`, `/resume` | ✅ |
 | Seleção de modelo e esforço de raciocínio (`/model`, `--model`, `--reasoning-effort`) | ✅ |
@@ -110,6 +104,7 @@ dsh-tui --continue         # continua a sessão mais recente deste diretório
 dsh-tui --resume <id>      # retoma uma sessão específica
 dsh-tui --model deepseek-official/deepseek-v4-pro --reasoning-effort high
 dsh-tui --permission-mode read-only
+dsh-tui --no-welcome       # pula o painel de boas-vindas (cabeçalho compacto)
 dsh-tui doctor             # diagnóstico de Node, profile, runtime e credenciais
 ```
 

@@ -11,12 +11,10 @@ import {
   Spacer,
   Text,
   truncateToWidth,
-  wrapTextWithAnsi,
   type Component,
   type MarkdownTheme,
 } from '@earendil-works/pi-tui'
 import { diffLines as compareLines } from 'diff'
-import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { ContentBlock, StreamChunk } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -30,7 +28,7 @@ import type {
 import type { FileDiff } from '@deepseek-ai/dsh-tools'
 import { preview, renderUnknownXml } from './xml-tool-output.ts'
 import { displayInlineText, displayText } from './text.ts'
-import { gradientText, type Palette } from './theme.ts'
+import type { Palette } from './theme.ts'
 import { contentText, type ParsedArguments } from './content.ts'
 import {
   formatCompletionTime,
@@ -124,53 +122,6 @@ export function renderDiff(diff: FileDiff, maxDiffEditLength: number, palette: P
  */
 function messageHeader(label: string, color: (text: string) => string, palette: Palette): string {
   return palette.bold(palette.underline(color(displayText(label))))
-}
-
-/**
- * Borderless startup banner: product title, an optional configured subtitle,
- * and the session id. No box frame — each line renders as plain left-padded
- * text (matching transcript notices) so it reads on any theme.
- */
-export class HeaderComponent implements Component {
-  /** Columns of the banner currently revealed; `undefined` renders it whole. */
-  private revealWidth: number | undefined
-
-  constructor(
-    private readonly agent: Agent,
-    private readonly subtitle: () => string | undefined,
-    private readonly palette: Palette,
-    private readonly gradient: boolean,
-  ) {}
-
-  /**
-   * Clip the banner to `width` columns (the sweep reveal); `undefined` restores it.
-   * @param width - Revealed banner width in columns, or `undefined` for the whole banner.
-   */
-  setRevealWidth(width: number | undefined): void {
-    this.revealWidth = width
-  }
-
-  invalidate(): void {}
-
-  render(width: number): string[] {
-    const usable = Math.max(1, width - 2)
-    const name = this.gradient
-      ? this.palette.bold(gradientText('DEEPSEEK'))
-      : this.palette.bold(this.palette.accent('DEEPSEEK'))
-    const title = `${name} ${this.palette.bold('HARNESS')}`
-    const detail = displayText(this.agent.session.id)
-    const subtitle = this.subtitle()
-    const lines = [
-      title,
-      ...subtitle === undefined ? [] : [this.palette.dim(displayText(subtitle))],
-      this.palette.dim(detail),
-    ]
-      .flatMap(line => wrapTextWithAnsi(line, usable))
-      .map(line => ` ${truncateToWidth(line, usable, '')}`)
-    if (this.revealWidth === undefined) return lines
-    const revealed = this.revealWidth
-    return lines.map(line => truncateToWidth(line, revealed, ''))
-  }
 }
 
 /**
