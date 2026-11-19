@@ -18,7 +18,7 @@ Cada arquivo é um **array YAML de operações**:
 
 | Operação | Forma | Efeito |
 | --- | --- | --- |
-| ajustar config | `- id: tui` + `config: {...}` | mescla sobre a config atual da linha |
+| ajustar config | `- id: tui` + `config: {...}` | **substitui** a config da linha (merge raso: repita as chaves que devem permanecer) |
 | desligar | `- id: hmr` + `disabled: true` | remove a linha da árvore |
 | inserir | `- id: include-x` + `insert: [...]` | insere plugins novos depois daquela linha |
 
@@ -100,6 +100,30 @@ plugins; o launcher só substitui `node_modules/@gblelis/dsh-tui-bundle`.
 
 Essas linhas existem porque o `dsh-base` é compartilhado com o Web/Desktop; elas são as únicas adições
 funcionais que o terminal precisa.
+
+## Providers de modelo
+
+O DSH já monta o adaptador multi-provider `@deepseek-ai/dsh-llm-pi-ai` em modo dormente: nenhuma rota
+existe até você declarar `providers` na sua camada. É assim que se adiciona OpenRouter, OpenAI, Anthropic,
+LiteLLM, um gateway OpenAI-compatible, Ollama ou vLLM ao terminal — a credencial continua em
+`apiKeyEnv` (resolvida pelo `.credentials.yaml`/ambiente) e os modelos aparecem em `/model`.
+
+```yaml
+- id: llm-pi-ai
+  config:
+    providers:
+      litellm:
+        displayName: LiteLLM
+        apiKeyEnv: LITELLM_API_KEY
+        api: openai-completions
+        baseURL: http://127.0.0.1:4000/v1
+        models:
+          - id: deepseek-v41-flash(max)
+            contextWindow: 400000
+```
+
+Receitas completas (catálogo pi-ai, endpoints próprios, cópia do provider configurado no Web e solução de
+problemas): [providers.md](providers.md).
 
 ## Servidores MCP
 

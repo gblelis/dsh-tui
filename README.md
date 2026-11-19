@@ -121,6 +121,16 @@ dsh-tui
 Se você já configurou o Desktop/Web, o arquivo `.credentials.yaml` já existe e o `dsh-tui` usa a mesma
 conta. `dsh-tui doctor` mostra qual fonte foi encontrada.
 
+### Outros providers
+
+Além da rota oficial da DeepSeek, o profile do terminal pode declarar qualquer provider do adaptador
+multi-provider do DSH (`llm-pi-ai`): OpenRouter, OpenAI, Anthropic, LiteLLM, gateways OpenAI-compatible,
+Ollama/vLLM e afins. A configuração fica na sua camada de patch
+(`$DSH_HOME/profiles/tui/cordis.patch.yml`), as credenciais continuam no `.credentials.yaml`/ambiente e os
+modelos passam a aparecer em `/model`. Se o provider já está configurado na página **Models** do Web, dá
+para copiar o bloco `llm-pi-ai` de `profiles/web` para `profiles/tui`. Receitas e exemplos em
+[providers.md](docs/providers.md).
+
 ---
 
 ## Teclas

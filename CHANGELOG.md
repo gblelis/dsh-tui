@@ -8,7 +8,11 @@
   and git branch, permission preset, session id and the keys worth knowing. It centres on wide terminals,
   falls back to a two-line header below 46 columns, and is skipped by `--no-welcome`.
 - **Ruled composer and richer footer**: the editor draws its horizontal frame, and the footer prompt gained
-  the active permission preset (`${permission}`), so mode changes are visible without opening `/permissions`.
+  the active permission preset (`${permission}`) whenever it differs from the `workspace-write` default, so
+  less restrictive modes are visible without opening `/permissions`.
+- **Provider guide** (`docs/providers.md`): how to add catalog and custom providers through the DSH
+  `llm-pi-ai` adapter, including copying a route configured in the Web profile and using
+  `apiKeyEnv`/`.credentials.yaml` for keys.
 - Unit tests for `WelcomeComponent` (layout, narrow fallback, live state, tagline) and a committed golden
   screen for the panel.
 

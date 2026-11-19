@@ -84,7 +84,9 @@ and diffs, collapsible tool cards, reasoning, per-phase timing, token/cache foot
 skills (including bundled `dsh-doc`) and `/skill:`, prompt history, file/command autocomplete, scheduled
 tasks (`schedule_*`), and per-subagent model selection (`list_subagent_models`). The startup screen is a
 bordered panel (model, directory/branch, permission preset, session, key hints) above a ruled composer;
-`--no-welcome` falls back to the compact header. Known host-side gaps are listed in the parity document.
+`--no-welcome` falls back to the compact header. Extra providers (OpenRouter, OpenAI, Anthropic, LiteLLM,
+Ollama/vLLM…) mount through the DSH multi-provider adapter; recipes are in the (Portuguese)
+[provider guide](docs/providers.md). Known host-side gaps are listed in the parity document.
 
 | Gate | What it proves |
 | --- | --- |

@@ -35,6 +35,7 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | Timing por fase (espera do modelo, thinking, resposta, tools) | ✅ |
 | Tokens e cache hit rate no rodapé | ✅ |
 | Tela inicial: painel de boas-vindas com modelo, diretório, preset e atalhos | ✅ (reskin; overlay original não portado) |
+| Providers adicionais via `llm-pi-ai` (OpenRouter, OpenAI, LiteLLM, Ollama/vLLM…) | ✅ (adapter do core; config na camada do usuário) |
 | Editor multilinha com histórico, `Tab` e autocomplete de arquivos | ✅ |
 | Autocomplete de comandos e de referências de sessão | ✅ |
 | Diálogos de pergunta (`ask_user_question`) | ✅ |

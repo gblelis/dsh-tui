@@ -428,9 +428,13 @@ export function createTuiChat(
     const usage = `↑${formatTokens(tokens.input)} ↓${formatTokens(tokens.output)}`
     const selection = currentSelection()
     modelValue.set(`  ${palette.dim(displayText(selection === undefined ? 'model unset' : compactTargetLabel(selection)))}`)
-    permissionValue.set(permissionPresets === undefined
+    // The default preset stays out of the footer so a long path/model never
+    // clips the trailing context reading; deviations (danger-full-access and
+    // custom presets) remain visible at a glance.
+    const activePreset = permissionPresets?.current(agent.session)
+    permissionValue.set(activePreset === undefined || activePreset === 'workspace-write'
       ? undefined
-      : `  ${palette.dim(displayText(permissionPresets.current(agent.session)))}`)
+      : `  ${palette.dim(displayText(activePreset))}`)
     tokenValue.set(`  ${palette.dim(rate === undefined ? usage : `${usage}  cache ${rate}%`)}`)
     const contextWindow = modelController.contextWindow()
     contextValue.set(contextWindow === undefined ? undefined : `  ${palette.dim(
