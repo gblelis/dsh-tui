@@ -4,7 +4,7 @@
  * the suite needs no dsh runtime and no terminal.
  */
 
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -111,7 +111,10 @@ describe('argument dispatch', () => {
     writeFileSync(join(pkg, 'lib', 'bin.js'), '#!/usr/bin/env node\n')
     writeFileSync(join(pkg, 'lib', 'other.js'), '// not the entry\n')
 
-    expect(findRuntime(pkg).bin).toBe(join(pkg, 'lib', 'bin.js'))
+    // The resolver reports the real path (macOS maps /var to /private/var), so
+    // expectations run through realpath too instead of assuming the temp path.
+    const real = realpathSync(pkg)
+    expect(findRuntime(pkg).bin).toBe(join(real, 'lib', 'bin.js'))
     expect(findRuntime(join(pkg, 'lib', 'bin.js')).version).toBe('0.2.2-rc.5')
     // A different file inside the package is not the runtime.
     expect(() => findRuntime(join(pkg, 'lib', 'other.js'))).toThrow(/lib\/bin\.js/u)
@@ -120,7 +123,7 @@ describe('argument dispatch', () => {
     // is the file that will actually run.
     const link = join(root, 'bin-link.js')
     symlinkSync(join(pkg, 'lib', 'bin.js'), link)
-    expect(findRuntime(link).bin).toBe(join(pkg, 'lib', 'bin.js'))
+    expect(findRuntime(link).bin).toBe(join(real, 'lib', 'bin.js'))
   })
 
   it('maps help and version aliases', () => {
