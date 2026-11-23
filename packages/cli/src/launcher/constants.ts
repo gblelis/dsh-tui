@@ -10,9 +10,6 @@ export const CLI_PACKAGE = '@gblelis/dsh-tui'
 /** Version stamped into the generated bundle manifest by the build. */
 export const BUNDLE_PACKAGE = '@gblelis/dsh-tui-bundle'
 
-/** The dsh bundle this launcher installs into its profile. */
-export const BUNDLE_VERSION = '0.1.0'
-
 /**
  * The dsh runtime range this build targets. The bundle's own `engines.dsh`
  * carries the same range; this copy lets the launcher fail early with a better

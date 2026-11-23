@@ -6,10 +6,11 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   BUNDLE_PACKAGE,
-  BUNDLE_VERSION,
   CLI_PACKAGE,
   DSH_COMPAT_RANGE,
   PROFILE_NAME,
@@ -131,12 +132,42 @@ export function parseInvocation(argv: readonly string[]): Invocation {
   return { command: command ?? 'run', ...home === undefined ? {} : { home }, ...dshBin === undefined ? {} : { dshBin }, rest, json }
 }
 
-/** Print the launcher/bundle/runtime version banner. */
-function versionLine(runtime: RuntimeInfo | undefined): string {
+/**
+ * Read one version string from a package manifest.
+ * @param manifest - Absolute path to the manifest.
+ * @returns Its `version`, or `unknown` when it cannot be read.
+ */
+async function manifestVersion(manifest: string): Promise<string> {
+  try {
+    const value: unknown = JSON.parse(await readFile(manifest, 'utf8'))
+    if (typeof value === 'object' && value !== null
+      && typeof (value as { version?: unknown }).version === 'string') {
+      return (value as { version: string }).version
+    }
+  } catch {
+    // `version` is a diagnostic: a missing manifest is reported elsewhere.
+  }
+  return 'unknown'
+}
+
+/**
+ * Print the launcher/bundle/runtime version banner. Both versions come from the
+ * artifacts themselves, so they cannot drift from a hand-maintained constant.
+ * @param runtime - Located dsh runtime, when one resolved.
+ * @returns The banner text.
+ */
+async function versionLine(runtime: RuntimeInfo | undefined): Promise<string> {
+  const launcher = await manifestVersion(fileURLToPath(new URL('../package.json', import.meta.url)))
+  let bundle = 'unknown'
+  try {
+    bundle = (await readEmbeddedBundle()).version
+  } catch {
+    // A missing embedded artifact is an install problem; doctor names it.
+  }
   const runtimeText = runtime === undefined
     ? 'dsh runtime: not found'
     : `dsh ${runtime.version}${runtimeCompatible(runtime.version) ? '' : ` (outside ${DSH_COMPAT_RANGE})`} at ${runtime.packageDir}`
-  return `${CLI_PACKAGE} ${BUNDLE_VERSION}\nbundle ${BUNDLE_PACKAGE} ${BUNDLE_VERSION}\n${runtimeText}`
+  return `${CLI_PACKAGE} ${launcher}\nbundle ${BUNDLE_PACKAGE} ${bundle}\n${runtimeText}`
 }
 
 /** Ensure the profile exists and is current. */
@@ -191,7 +222,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     } catch {
       runtime = undefined
     }
-    process.stdout.write(`${versionLine(runtime)}\n`)
+    process.stdout.write(`${await versionLine(runtime)}\n`)
     return 0
   }
   if (invocation.command === 'profile') {

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-11-23
 
 ### Added
 
@@ -15,6 +15,12 @@
   `apiKeyEnv`/`.credentials.yaml` for keys.
 - Unit tests for `WelcomeComponent` (layout, narrow fallback, live state, tagline) and a committed golden
   screen for the panel.
+
+### Changed
+
+- `dsh-tui version` reads the launcher and bundle versions from their manifests instead of a
+  hand-maintained constant, and `pnpm verify:package` now fails when the embedded bundle version drifts
+  from the published one.
 
 ### Fixed
 

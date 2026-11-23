@@ -74,7 +74,9 @@ for (const path of paths) {
 }
 
 // The launcher recomputes this digest before copying the bundle into a profile;
-// a mismatch here would make every install fail on first boot.
+// a mismatch here would make every install fail on first boot. The three
+// version strings ship together, so drift between them is a release bug the
+// tarball check can catch before it publishes.
 const bundleDir = join(cliDir, 'bundle')
 const manifestPath = join(bundleDir, 'manifest.json')
 if (existsSync(manifestPath)) {
@@ -83,6 +85,13 @@ if (existsSync(manifestPath)) {
   if (typeof record.hash !== 'string' || !Array.isArray(record.files)) {
     failures.push('bundle/manifest.json is incomplete')
   } else {
+    const embedded = JSON.parse(readFileSync(join(bundleDir, 'package.json'), 'utf8')) as { version?: unknown }
+    if (record.version !== manifest.version) {
+      failures.push(`bundle/manifest.json says ${String(record.version)} but package.json says ${String(manifest.version)}`)
+    }
+    if (embedded.version !== manifest.version) {
+      failures.push(`the embedded bundle is ${String(embedded.version)} but the launcher publishes ${String(manifest.version)}`)
+    }
     const digest = createHash('sha256')
     for (const file of [...record.files].filter((entry): entry is string => typeof entry === 'string').sort((a, b) => a.localeCompare(b))) {
       digest.update(file)

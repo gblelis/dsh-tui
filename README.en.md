@@ -29,7 +29,7 @@ npm install -g @gblelis/dsh-tui
 # from a checkout, before that
 git clone git@github.com:<you>/deepseek-harness-tui.git
 cd deepseek-harness-tui && corepack enable && pnpm install && pnpm build
-cd packages/cli && npm pack && npm install -g ./gblelis-dsh-tui-0.1.0.tgz
+cd packages/cli && npm pack && npm install -g ./gblelis-dsh-tui-0.2.0.tgz
 ```
 
 The package ships one launcher plus the embedded bundle; it installs `@deepseek-ai/dsh` itself, so the first

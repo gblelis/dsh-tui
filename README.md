@@ -19,7 +19,7 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 
 ---
 
-## Estado atual (v0.1.0)
+## Estado atual (v0.2.0)
 
 | Área | Situação |
 | --- | --- |
@@ -60,8 +60,8 @@ git clone git@github.com:<você>/deepseek-harness-tui.git
 cd deepseek-harness-tui
 corepack enable && pnpm install
 pnpm build
-cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.1.0.tgz
-npm install -g ./gblelis-dsh-tui-0.1.0.tgz
+cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.2.0.tgz
+npm install -g ./gblelis-dsh-tui-0.2.0.tgz
 ```
 
 Depois do primeiro publish no npm:
