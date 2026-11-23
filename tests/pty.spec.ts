@@ -4,12 +4,13 @@
  * the terminal outright; this test is the one that exercises `ProcessTerminal`
  * itself — raw stdin, resize handling and the real write path.
  *
- * Skipped where a PTY cannot be allocated (sandboxes, some containers) or
- * where `script(1)` is missing. CI runs it on Ubuntu and macOS.
+ * Skipped where a PTY cannot be allocated (sandboxes, some containers), where
+ * `script(1)` is missing, or where `packages/cli/lib/bin.js` has not been built
+ * yet. CI runs it on Ubuntu and macOS after `pnpm build`.
  */
 
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdtempSync } from 'node:fs'
+import { existsSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -43,8 +44,11 @@ function ptyCommand(command: string): { bin: string; args: string[] } | undefine
 }
 
 const pty = ptyCommand('true')
+// `pnpm test` can run before `pnpm build`, when the launcher artifact does not
+// exist yet; the dedicated CI step runs this file after the build.
+const built = existsSync(cli)
 
-describe.skipIf(pty === undefined)('PTY boot', () => {
+describe.skipIf(pty === undefined || !built)('PTY boot', () => {
   it('renders the banner and prompt, then exits cleanly on Ctrl+D', async () => {
     const home = mkdtempSync(join(tmpdir(), 'dsh-tui-pty-'))
     const command = [

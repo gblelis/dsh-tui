@@ -228,8 +228,14 @@ describe('checkForUpdate', () => {
   })
 
   it('survives an unwritable cache directory', async () => {
+    // A regular file where the cache directory should go: `mkdir -p` fails
+    // with ENOTDIR on every platform, unlike a system path such as /proc whose
+    // behavior depends on how the runner mounts its filesystem.
+    const dir = home()
+    const blocker = join(dir, 'blocker')
+    writeFileSync(blocker, '')
     const status = await checkForUpdate({
-      home: '/proc/definitely-not-writable',
+      home: join(blocker, 'nested'),
       fetchImpl: (async () => jsonResponse({ latest: '0.2.2-rc.5' })) as typeof fetch,
     })
     expect(status?.cached).toBe(false)
