@@ -140,7 +140,14 @@ export function apply(ctx: Context): void {
     ctx.provide(TUI_STARTUP_SERVICE, values)
   })
 
-  parseCmdline(ctx, program)
+  // `commander` is resolved twice in a pnpm workspace: the copy this bundle
+  // imports (its devDependency, also inlined into the artifact by tsdown) and
+  // the copy the `@deepseek-ai/dsh-cmdline` types resolve from the store. Same
+  // API, but TypeScript sees two nominal classes because of their private
+  // fields, and which copy each side resolves to depends on the hoisting
+  // layout. Keeping the cast at this single boundary beats a version
+  // constraint that would only move the mismatch around.
+  parseCmdline(ctx, program as unknown as Parameters<typeof parseCmdline>[1])
 
   // A profile bundle whose front-door row failed to import keeps the process
   // alive with no interface: the Loader reports a warning and exits 0. Detect
