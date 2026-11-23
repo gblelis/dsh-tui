@@ -765,7 +765,12 @@ export class TodoComponent implements Component {
    * @param todos - The current todo items.
    */
   update(todos: readonly TodoItem[]): void {
-    this.todos = todos
+    // A resumed session replays whatever the log holds: keep only the shape the
+    // renderer can handle instead of throwing mid-frame.
+    this.todos = Array.isArray(todos)
+      ? todos.filter((todo): todo is TodoItem => todo !== null && typeof todo === 'object'
+        && typeof (todo as { content?: unknown }).content === 'string')
+      : []
   }
 
   invalidate(): void {}

@@ -73,8 +73,9 @@ export function renderSessionMarkdown(
   lines.push(`# ${title}`, '')
   lines.push(`- Session: \`${header.sessionId}\``)
   lines.push(`- Workspace: \`${header.cwd}\``)
-  if (header.createdAt !== undefined) lines.push(`- Created: ${header.createdAt.toISOString()}`)
-  lines.push(`- Exported: ${header.exportedAt.toISOString()}`, '')
+  const iso = (value: Date): string => Number.isNaN(value.getTime()) ? 'unknown' : value.toISOString()
+  if (header.createdAt !== undefined) lines.push(`- Created: ${iso(header.createdAt)}`)
+  lines.push(`- Exported: ${iso(header.exportedAt)}`, '')
 
   for (const event of events) {
     if (!visible.has(event.seq)) continue

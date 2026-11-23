@@ -19,6 +19,27 @@
   the stable release: the alpha ships alpha vendored loader/hmr/schemastery and requires
   Node `^24.22.3 || >=26.13.1`.
 
+### Security
+
+- **Audit pass**: untrusted text is escaped in every field the welcome panel reads from the session
+  (title, id, cwd), `/export` writes mode `0600` and refuses a symlink target, the release cache writes
+  atomically with `0600`, the registry answer is bounded to 64 KiB, must be JSON and must be https with
+  no redirect, forged `todo/write` payloads are dropped instead of crashing the renderer, and the tool
+  XML tree stops at 24 levels.
+- **Bundle integrity**: the boot path now re-hashes the installed copy (~3 ms) instead of trusting
+  `stamp.json`; `sync` rewrites unconditionally; the manifest's file list is validated against `..`,
+  absolute and Windows paths before being used as a write destination, and the swap happens through a
+  staging directory plus one `rename`, so an interrupted copy never leaves a half-installed package.
+- **Release supply chain**: `prepublishOnly` only re-verifies (nothing rebuilds after the gates), the
+  workflow publishes the exact tarball that passed the install smoke, GitHub Actions are pinned by
+  commit SHA, and the GitHub release is created with `gh` instead of a third-party action inside the
+  job that holds the npm token and OIDC permission.
+- **Drift gate fixed**: `verify:package` compared the bundle manifest with itself and never with the CLI
+  version, and `scripts/` was outside the typecheck; both are fixed, and the checker now also rejects
+  files in `bundle/` that the manifest does not hash.
+- See `docs/seguranca.md` for the threat model, the reachability analysis of the 10 transitive
+  advisories (all unused by this profile) and the accepted risks.
+
 ### Fixed
 
 - **Prerelease admission**: `^0.2.2-rc.5` alone no longer admits `0.2.3-alpha.2`. npm's rule — a prerelease

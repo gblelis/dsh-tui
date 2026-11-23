@@ -9,8 +9,8 @@
 
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -57,8 +57,10 @@ const REQUIRED = [
   'bundle/lib/prompt-service.js',
 ]
 
-/** Prefixes that must never ship: sources, tests, or nested installs. */
-const FORBIDDEN = ['src/', 'tests/', 'node_modules/', 'scripts/', 'tsconfig', '.map']
+/** Path prefixes that must never ship: sources, tests, or nested installs. */
+const FORBIDDEN_PREFIXES = ['src/', 'tests/', 'node_modules/', 'scripts/', 'tsconfig']
+/** Path suffixes that must never ship, whatever directory holds them. */
+const FORBIDDEN_SUFFIXES = ['.map', '.tsbuildinfo']
 
 const failures: string[] = []
 const files = packList()
@@ -68,8 +70,9 @@ for (const required of REQUIRED) {
   if (!paths.has(required)) failures.push(`missing from the tarball: ${required}`)
 }
 for (const path of paths) {
-  for (const prefix of FORBIDDEN) {
-    if (path.startsWith(prefix)) failures.push(`must not ship: ${path}`)
+  if (FORBIDDEN_PREFIXES.some(prefix => path.startsWith(prefix))
+    || FORBIDDEN_SUFFIXES.some(suffix => path.endsWith(suffix))) {
+    failures.push(`must not ship: ${path}`)
   }
 }
 
@@ -79,38 +82,55 @@ for (const path of paths) {
 // tarball check can catch before it publishes.
 const bundleDir = join(cliDir, 'bundle')
 const manifestPath = join(bundleDir, 'manifest.json')
+const cliPackage = JSON.parse(readFileSync(join(cliDir, 'package.json'), 'utf8')) as { version?: unknown }
 if (existsSync(manifestPath)) {
-  const manifest: unknown = JSON.parse(readFileSync(manifestPath, 'utf8'))
-  const record = manifest as { version?: unknown; hash?: unknown; files?: unknown }
-  if (typeof record.hash !== 'string' || !Array.isArray(record.files)) {
+  const bundleManifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { version?: unknown; hash?: unknown; files?: unknown }
+  if (typeof bundleManifest.hash !== 'string' || !Array.isArray(bundleManifest.files)) {
     failures.push('bundle/manifest.json is incomplete')
   } else {
     const embedded = JSON.parse(readFileSync(join(bundleDir, 'package.json'), 'utf8')) as { version?: unknown }
-    if (record.version !== manifest.version) {
-      failures.push(`bundle/manifest.json says ${String(record.version)} but package.json says ${String(manifest.version)}`)
+    // The three version strings ship together: an embedded bundle older than
+    // the launcher would install a stale TUI under a new version number.
+    if (bundleManifest.version !== cliPackage.version) {
+      failures.push(`bundle/manifest.json says ${String(bundleManifest.version)} but the CLI publishes ${String(cliPackage.version)}`)
     }
-    if (embedded.version !== manifest.version) {
-      failures.push(`the embedded bundle is ${String(embedded.version)} but the launcher publishes ${String(manifest.version)}`)
+    if (embedded.version !== cliPackage.version) {
+      failures.push(`the embedded bundle is ${String(embedded.version)} but the CLI publishes ${String(cliPackage.version)}`)
+    }
+    // Every file in bundle/ must be hashed, or an unlisted file would travel
+    // in the tarball without the launcher ever verifying it.
+    const listed = new Set(bundleManifest.files.filter((entry): entry is string => typeof entry === 'string'))
+    const onDisk: string[] = []
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name)
+        if (entry.isDirectory()) walk(path)
+        else onDisk.push(relative(bundleDir, path).split(sep).join('/'))
+      }
+    }
+    walk(bundleDir)
+    for (const file of onDisk) {
+      if (!listed.has(file) && file !== 'manifest.json') failures.push(`bundle/${file} is not listed in bundle/manifest.json`)
     }
     const digest = createHash('sha256')
-    for (const file of [...record.files].filter((entry): entry is string => typeof entry === 'string').sort((a, b) => a.localeCompare(b))) {
+    for (const file of [...listed].sort((a, b) => a.localeCompare(b))) {
       digest.update(file)
       digest.update('\0')
       digest.update(readFileSync(join(bundleDir, ...file.split('/'))))
       digest.update('\0')
     }
     const actual = digest.digest('hex')
-    if (actual !== record.hash) {
-      failures.push(`bundle content hash mismatch: manifest ${record.hash.slice(0, 12)}…, files ${actual.slice(0, 12)}…`)
+    if (actual !== bundleManifest.hash) {
+      failures.push(`bundle content hash mismatch: manifest ${bundleManifest.hash.slice(0, 12)}…, files ${actual.slice(0, 12)}…`)
     }
   }
 }
 
 // Every published file must be listed by `files` in package.json, and every
 // listed directory must exist, so a stale build cannot be published silently.
-const manifest = JSON.parse(readFileSync(join(cliDir, 'package.json'), 'utf8')) as { files?: unknown; bin?: unknown; version?: unknown }
-if (!Array.isArray(manifest.files)) failures.push('packages/cli/package.json has no files list')
-if (typeof manifest.version !== 'string') failures.push('packages/cli/package.json has no version')
+const cliFiles = JSON.parse(readFileSync(join(cliDir, 'package.json'), 'utf8')) as { files?: unknown }
+if (!Array.isArray(cliFiles.files)) failures.push('packages/cli/package.json has no files list')
+if (typeof cliPackage.version !== 'string') failures.push('packages/cli/package.json has no version')
 
 const total = files.reduce((sum, file) => sum + file.size, 0)
 process.stdout.write(`${files.length} files, ${(total / 1024).toFixed(1)} kB unpacked\n`)

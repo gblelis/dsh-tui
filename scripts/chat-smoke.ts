@@ -217,7 +217,7 @@ const exported = readdirSync(home).filter(name => name.startsWith('dsh-transcrip
 if (exported.length === 0) {
   failures.push('/export wrote no transcript file')
 } else {
-  const markdown = readFileSync(join(home, exported[0]), 'utf8')
+  const markdown = readFileSync(join(home, exported[0] ?? ''), 'utf8')
   if (!markdown.includes(PROMPT)) failures.push('/export transcript is missing the user message')
   if (!markdown.includes(REPLY)) failures.push('/export transcript is missing the reply')
   if (!screen.includes('Exported this session to')) failures.push('/export did not confirm the path in the transcript')

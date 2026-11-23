@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from 'vitest'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { formatDiagnosticTime } from '../src/components/dialogs.ts'
 import { parseTuiPromptTemplate, renderTuiPromptTemplate } from '../src/prompt-service.ts'
 import { cacheHitRate, formatTokens, recordTokenUsage, sessionTokens } from '../src/chat/tokens.ts'
 import {
@@ -170,5 +171,13 @@ describe('configuration defaults', () => {
     expect(resolved.maxToolOutputLines).toBe(12)
     expect(resolved.theme.color).toBe(false)
     expect(resolved.theme.truecolor).toBe(false)
+  })
+})
+
+describe('forged session timestamps', () => {
+  it('renders a placeholder instead of throwing on an invalid date', () => {
+    expect(formatDiagnosticTime(Number.NaN)).toBe('unknown time')
+    expect(formatDiagnosticTime(Number.POSITIVE_INFINITY)).toBe('unknown time')
+    expect(formatDiagnosticTime(Date.UTC(2026, 10, 23, 12, 0))).toBe('2026-11-23 12:00:00 UTC')
   })
 })

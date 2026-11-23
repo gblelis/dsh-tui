@@ -63,12 +63,21 @@ const home = join(work, 'home')
 mkdirSync(home, { recursive: true })
 const env: NodeJS.ProcessEnv = { ...process.env, npm_config_cache: cache }
 
-const packed = run(npm, ['pack', '--pack-destination', work, '--cache', cache], env, cliPackage)
-const tarball = packed.trim().split('\n').at(-1) ?? ''
-if (!tarball.endsWith('.tgz')) throw new Error(`npm pack did not report a tarball:\n${packed}`)
-process.stdout.write(`packed ${tarball}\n`)
+// A release packs once and hands the exact tarball to this smoke and to
+// `npm publish`; local runs pack their own.
+const provided = process.env.DSH_TUI_TARBALL?.trim()
+let tarball: string
+if (provided !== undefined && provided !== '') {
+  tarball = provided
+  process.stdout.write(`using ${tarball}\n`)
+} else {
+  const packed = run(npm, ['pack', '--pack-destination', work, '--cache', cache], env, cliPackage)
+  tarball = packed.trim().split('\n').at(-1) ?? ''
+  if (!tarball.endsWith('.tgz')) throw new Error(`npm pack did not report a tarball:\n${packed}`)
+  process.stdout.write(`packed ${tarball}\n`)
+}
 
-run(npm, ['install', '-g', '--prefix', prefix, '--ignore-scripts', join(work, tarball)], env)
+run(npm, ['install', '-g', '--prefix', prefix, '--ignore-scripts', provided !== undefined && provided !== '' ? tarball : join(work, tarball)], env)
 process.stdout.write('installed into a clean prefix\n')
 
 const bin = join(prefix, 'bin', 'dsh-tui')

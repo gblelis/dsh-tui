@@ -166,8 +166,8 @@ Como o `hmr` está desligado, reinicie a TUI depois de editar a camada.
   duas cópias do core (cordis duplicado = eventos não chegam).
 - **Não copie `packages/bundle/src` para dentro do dsh.** O caminho de evolução é o patch/bundle, não um
   fork.
-- **Não edite `profiles/tui/node_modules/@gblelis/dsh-tui-bundle`** — o hash em `.dsh-tui/stamp.json` faz o
-  launcher recopiar no próximo boot. Use a camada do usuário.
+- **Não edite `profiles/tui/node_modules/@gblelis/dsh-tui-bundle`** — o launcher re-hasheia a cópia a cada
+  boot e recopia quando diverge (ou rode `dsh-tui sync` para forçar). Use a camada do usuário.
 
 ## Depurando a composição
 

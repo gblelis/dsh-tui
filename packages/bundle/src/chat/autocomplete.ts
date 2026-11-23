@@ -68,7 +68,9 @@ export class ReferenceAutocompleteProvider implements AutocompleteProvider {
       const mentionLabel = displayInlineText(candidate.displayTitle ?? candidate.label)
       const sessionId = displayInlineText(candidate.sessionId)
       const location = candidate.cwd === undefined ? '(no cwd)' : displayInlineText(candidate.cwd)
-      const description = `${candidate.label === candidate.sessionId ? '' : `${sessionId} · `}${location} · ${new Date(candidate.createdAt).toISOString()}`
+      const createdAt = new Date(candidate.createdAt)
+      const stamp = Number.isNaN(createdAt.getTime()) ? 'unknown time' : createdAt.toISOString()
+      const description = `${candidate.label === candidate.sessionId ? '' : `${sessionId} · `}${location} · ${stamp}`
       return {
         value: formatSessionReferenceMention({ sessionId: candidate.sessionId, label: mentionLabel }),
         label: `Session · ${mentionLabel}`,

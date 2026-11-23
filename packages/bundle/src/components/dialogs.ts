@@ -136,7 +136,12 @@ export function formatDiagnosticNumber(value: number): string {
  * @returns The formatted UTC timestamp.
  */
 export function formatDiagnosticTime(value: number): string {
-  return new Date(value).toISOString().replace('T', ' ').replace(/\.\d{3}Z$/u, ' UTC')
+  // A resumed log can carry any timestamp; an unparsable one must render a
+  // placeholder instead of throwing inside the frame.
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? 'unknown time'
+    : date.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/u, ' UTC')
 }
 
 /**
@@ -763,7 +768,7 @@ export class ResumePicker implements Component, Focusable {
       ].filter((value): value is string => value !== undefined).join(' · ')
       const lead = `${active ? '❯' : ' '} ${displayText(candidate.title)}`
       push(active ? this.palette.bold(this.palette.accent(lead)) : lead)
-      push(this.palette.dim(`  ${new Date(candidate.lastActivityAt).toISOString()} · ${status} · ${displayText(candidate.record.header.id)}`))
+      push(this.palette.dim(`  ${formatDiagnosticTime(candidate.lastActivityAt)} · ${status} · ${displayText(candidate.record.header.id)}`))
       // Only the all-workspaces scope mixes directories, so the per-row
       // workspace is redundant in the scope that already names one.
       if (this.scope === 'all') {

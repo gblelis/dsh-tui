@@ -85,6 +85,22 @@ describe('WelcomeComponent', () => {
     expect(updated).not.toContain('workspace-write')
   })
 
+  it('escapes terminal controls in every field that comes from the session', () => {
+    const component = new WelcomeComponent(() => ({
+      ...snapshot,
+      sessionId: 'session-1\u001b[2J',
+      tagline: 'title \u001b]52;c;ZXZpbA==\u0007',
+      cwd: '~/x\u2028y',
+    }), palette, false)
+    const rendered = component.render(100).join('\n')
+    expect(rendered).not.toContain('\u001b')
+    expect(rendered).toContain('\\x1b[2J')
+    expect(rendered).toContain('\\x1b]52')
+    // U+2028 is a line separator, not a control byte: it must survive unless
+    // the sanitizer grows that rule deliberately.
+    expect(rendered).toContain('\u2028')
+  })
+
   it('uses a configured tagline (or session title) instead of the default', () => {
     const text = panel({ ...snapshot, tagline: 'fix the welcome screen' }).render(80).join('\n')
     expect(text).toContain('fix the welcome screen')

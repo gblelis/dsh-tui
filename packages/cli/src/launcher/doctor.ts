@@ -9,8 +9,8 @@ import { accessSync, constants, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { BUNDLE_PACKAGE, DSH_COMPAT_RANGE, PROFILE_NAME } from './constants.ts'
 import { MIN_NODE, type ResolvedPaths } from './env.ts'
-import { bundleModuleDir, profileDir } from './env.ts'
-import { listInstalledBundle, readEmbeddedBundle } from './profile.ts'
+import { profileDir } from './env.ts'
+import { readEmbeddedBundle, verifyInstalledBundle } from './profile.ts'
 import { findRuntime, runtimeCompatible } from './runtime.ts'
 import { compareVersions, satisfiesRange } from './semver.ts'
 
@@ -150,24 +150,18 @@ export async function diagnose(paths: ResolvedPaths, explicitBin?: string): Prom
     out.push({ name: 'Embedded bundle', status: 'fail', detail: error instanceof Error ? error.message : String(error) })
   }
   if (bundle !== undefined) {
-    const installedFiles = await listInstalledBundle(bundleModuleDir(profile))
-    const stampPath = join(profile, '.dsh-tui', 'stamp.json')
-    let stamp: { version?: unknown; hash?: unknown } | undefined
-    try {
-      stamp = JSON.parse(readFileSync(stampPath, 'utf8')) as { version?: unknown; hash?: unknown }
-    } catch {
-      stamp = undefined
-    }
-    const current = installedFiles.length > 0 && stamp?.version === bundle.version && stamp.hash === bundle.hash
+    const health = await verifyInstalledBundle(paths)
     out.push({
       name: 'Embedded bundle',
-      status: current ? 'ok' : installedFiles.length === 0 ? 'warn' : 'warn',
-      detail: current
-        ? `${BUNDLE_PACKAGE}@${bundle.version} (${installedFiles.length} files)`
-        : installedFiles.length === 0
+      status: health.status === 'ok' ? 'ok' : 'warn',
+      detail: health.status === 'ok'
+        ? `${BUNDLE_PACKAGE}@${bundle.version} (${String(health.files)} files, content hash verified)`
+        : health.status === 'missing'
           ? `${BUNDLE_PACKAGE}@${bundle.version} not installed in the profile yet`
-          : `${BUNDLE_PACKAGE}@${bundle.version} needs a refresh (installed ${String(stamp?.version ?? 'unknown')})`,
-      ...current ? {} : { hint: 'Run `dsh-tui sync`; the launcher also repairs this automatically on the next run.' },
+          : health.status === 'unreadable'
+            ? `the embedded bundle is unreadable: ${health.detail}`
+            : `${BUNDLE_PACKAGE}@${bundle.version} needs a refresh (${health.detail})`,
+      ...health.status === 'ok' ? {} : { hint: 'Run `dsh-tui sync`; it rewrites the copy even when the stamp says it is current.' },
     })
   }
 

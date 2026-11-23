@@ -20,7 +20,7 @@ import {
   type SlashCommand,
   type TerminalColorScheme,
 } from '@earendil-works/pi-tui'
-import { existsSync } from 'node:fs'
+import { existsSync, lstatSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -1529,8 +1529,20 @@ export function createTuiChat(
           createdAt: new Date(header.createdAt),
           exportedAt: new Date(),
         })
+        // The transcript is a copy of the conversation, which may contain
+        // secrets pasted into the chat: keep it private and never write
+        // through a symlink planted at the target path.
+        try {
+          if (lstatSync(file).isSymbolicLink()) {
+            appendNotice(`Refusing to export through the symlink ${file}; choose another path.`, 'error')
+            requestRender()
+            return { kind: 'error', text: 'export target is a symlink' }
+          }
+        } catch {
+          // ENOENT is the normal case.
+        }
         await mkdir(dirname(file), { recursive: true })
-        await writeFile(file, markdown, 'utf8')
+        await writeFile(file, markdown, { encoding: 'utf8', mode: 0o600 })
         appendNotice(`Exported this session to ${file}`, 'info')
         requestRender()
         return { kind: 'success' }

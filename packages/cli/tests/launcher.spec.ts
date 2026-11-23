@@ -4,11 +4,15 @@
  * the suite needs no dsh runtime and no terminal.
  */
 
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { compareVersions, parseVersion, satisfiesRange } from '../src/launcher/semver.ts'
 import { parseInvocation } from '../src/launcher/main.ts'
-import { mergeBundles, artifactHash } from '../src/launcher/profile.ts'
+import { mergeBundles, artifactHash, isContainedRelativePath } from '../src/launcher/profile.ts'
 import { BUNDLE_PACKAGE, PROFILE_BUNDLES } from '../src/launcher/constants.ts'
+import { findRuntime } from '../src/launcher/runtime.ts'
 
 describe('semver gate', () => {
   it('parses prerelease versions', () => {
@@ -88,6 +92,35 @@ describe('argument dispatch', () => {
   it('refuses a prerelease against a stable floor', () => {
     expect(satisfiesRange('26.0.0-rc.1', '>=24.9.0')).toBe(false)
     expect(satisfiesRange('26.13.0', '>=24.9.0')).toBe(true)
+  })
+
+  it('rejects manifest paths that would escape the bundle directory', () => {
+    for (const safe of ['package.json', 'lib/index.js', 'lib/testing/capture-terminal.js']) {
+      expect(isContainedRelativePath(safe)).toBe(true)
+    }
+    for (const unsafe of ['', '/etc/passwd', '../outside', 'lib/../../x', 'a//b', 'C:/x', 'lib\\x.js', './lib']) {
+      expect(isContainedRelativePath(unsafe)).toBe(false)
+    }
+  })
+
+  it('resolves an explicit runtime only through its own lib/bin.js', () => {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-runtime-'))
+    const pkg = join(root, 'node_modules', '@deepseek-ai', 'dsh')
+    mkdirSync(join(pkg, 'lib'), { recursive: true })
+    writeFileSync(join(pkg, 'package.json'), JSON.stringify({ name: '@deepseek-ai/dsh', version: '0.2.2-rc.5' }))
+    writeFileSync(join(pkg, 'lib', 'bin.js'), '#!/usr/bin/env node\n')
+    writeFileSync(join(pkg, 'lib', 'other.js'), '// not the entry\n')
+
+    expect(findRuntime(pkg).bin).toBe(join(pkg, 'lib', 'bin.js'))
+    expect(findRuntime(join(pkg, 'lib', 'bin.js')).version).toBe('0.2.2-rc.5')
+    // A different file inside the package is not the runtime.
+    expect(() => findRuntime(join(pkg, 'lib', 'other.js'))).toThrow(/lib\/bin\.js/u)
+
+    // A symlink is resolved before the admission checks, so the reported path
+    // is the file that will actually run.
+    const link = join(root, 'bin-link.js')
+    symlinkSync(join(pkg, 'lib', 'bin.js'), link)
+    expect(findRuntime(link).bin).toBe(join(pkg, 'lib', 'bin.js'))
   })
 
   it('maps help and version aliases', () => {

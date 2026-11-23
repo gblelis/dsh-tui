@@ -171,8 +171,13 @@ async function versionLine(runtime: RuntimeInfo | undefined): Promise<string> {
 }
 
 /** Ensure the profile exists and is current. */
-async function ensure(paths: ResolvedPaths, runtime: RuntimeInfo | undefined, explicitBin: string | undefined): Promise<void> {
-  await ensureProfile(paths, runtime?.version)
+async function ensure(
+  paths: ResolvedPaths,
+  runtime: RuntimeInfo | undefined,
+  explicitBin: string | undefined,
+  options: { forceBundle?: boolean } = {},
+): Promise<void> {
+  await ensureProfile(paths, runtime?.version, options)
   void explicitBin
 }
 
@@ -268,7 +273,9 @@ export async function main(argv: readonly string[]): Promise<number> {
   }
 
   if (invocation.command === 'install' || invocation.command === 'sync') {
-    await ensure(paths, runtime, invocation.dshBin)
+    // `sync` is the repair verb: it rewrites the copy even when the stamp
+    // matches, so a truncated or hand-edited file is healed rather than trusted.
+    await ensure(paths, runtime, invocation.dshBin, { forceBundle: invocation.command === 'sync' })
     const bundle = await readEmbeddedBundle()
     if (invocation.command === 'install') {
       process.stdout.write([

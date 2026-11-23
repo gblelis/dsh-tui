@@ -43,7 +43,8 @@ export class CaptureTerminal implements Terminal {
 
   constructor(options: CaptureTerminalOptions) {
     this.#options = options
-    appendFileSync(options.output, '')
+    // The capture can contain the whole conversation; create it private.
+    appendFileSync(options.output, '', { mode: 0o600 })
   }
 
   get columns(): number { return this.#options.columns }
@@ -114,7 +115,14 @@ export function captureTerminalFromEnv(): CaptureTerminal | undefined {
   if (output === undefined || output === '') return undefined
   const columns = Number(process.env.DSH_TUI_CAPTURE_COLUMNS ?? 100)
   const rows = Number(process.env.DSH_TUI_CAPTURE_ROWS ?? 32)
-  const script: unknown = JSON.parse(process.env.DSH_TUI_CAPTURE_INPUT ?? '[]')
+  let script: unknown = []
+  try {
+    script = JSON.parse(process.env.DSH_TUI_CAPTURE_INPUT ?? '[]')
+  } catch {
+    // A malformed script must not stop the front end from mounting: the
+    // capture terminal still records output, it just replays no keys.
+    script = []
+  }
   const events = Array.isArray(script)
     ? script.filter((event): event is CaptureInputEvent =>
       event !== null && typeof event === 'object'

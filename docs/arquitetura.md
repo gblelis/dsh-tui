@@ -60,8 +60,9 @@ Por que embutir o bundle em vez de publicá-lo e instalar com `pnpm` no profile?
 1. O primeiro boot fica **offline e determinístico**: não há resolução de dependências dentro do
    `$DSH_HOME`.
 2. O bundle não pode puxar uma segunda cópia de `@deepseek-ai/cordis` (o profile sombrearia o core).
-3. O hash do artefato permite auto-reparo: o launcher compara `bundle/manifest.json` com
-   `.dsh-tui/stamp.json` e recopia quando o pacote muda.
+3. O hash do artefato permite auto-reparo: a cada boot o launcher re-hasheia os arquivos instalados
+   contra `bundle/manifest.json` (custo de ~3 ms) e recopia quando o stamp ou o conteúdo divergem.
+   `dsh-tui sync` força a reescrita; `doctor` mostra o mesmo veredito.
 4. Um pacote publicado só, uma versão pública só — o tarball contém tudo.
 
 ## Fluxo do launcher
@@ -82,7 +83,7 @@ Por que embutir o bundle em vez de publicá-lo e instalar com `pnpm` no profile?
 5. **Exec**: `node <dsh>/lib/bin.js --profile tui <args>`, com stdio herdado. O launcher sai com o código
    do filho e repassa sinais (`128 + n`). Nada fica em volta: o terminal pertence ao dsh.
 
-Subcomandos: `install` (cria/repara e imprime o resumo), `sync` (silencioso), `doctor` (11 verificações com
+Subcomandos: `install` (cria/repara e imprime o resumo), `sync` (silencioso), `doctor` (8 verificações com
 dica de correção), `profile [--json]`, `runtime [--json]`, `version`, `print` (mostra o comando em vez de
 executá-lo) e `help`.
 
@@ -166,7 +167,7 @@ Desktop/Web, e vice-versa. `cwd`, `parentSession`, `isSeeded` e `origin` são re
 | --- | --- |
 | `pnpm test` | comportamento puro + golden screens (layout versionado) |
 | `pnpm compat` | 11 checagens de API/versão contra o dsh pinado |
-| `pnpm verify:package` | conteúdo e metadados do tarball que iria ao npm |
+| `pnpm verify:package` | conteúdo, hash do bundle e coerência de versões do tarball que iria ao npm |
 | `pnpm smoke:screen` | o profile compõe e a TUI renderiza num terminal de verdade (headless) |
 | `pnpm smoke:chat` | prompt → stream → tool card real → `/export` → `/permissions` → `/login` → retomada |
 | `pnpm smoke:install` | `npm pack` → `npm install -g` → boot do binário instalado |

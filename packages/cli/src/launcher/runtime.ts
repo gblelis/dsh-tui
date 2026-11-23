@@ -6,7 +6,7 @@
 
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { delimiter, dirname, join, resolve } from 'node:path'
+import { basename, delimiter, dirname, join, resolve } from 'node:path'
 import { DSH_COMPAT_RANGE } from './constants.ts'
 import { LauncherError } from './env.ts'
 import { satisfiesRange } from './semver.ts'
@@ -64,14 +64,24 @@ function binFromPackageDir(packageDir: string): string | undefined {
 
 /** Resolve an explicit `--dsh-bin` / `$DSH_TUI_DSH_BIN` value to a runtime. */
 function fromExplicitPath(value: string, source: 'flag' | 'env'): RuntimeInfo {
-  const path = resolve(value)
-  if (!existsSync(path)) {
+  // Resolve symlinks first: the admission checks below must describe the file
+  // that will actually run, not a link that can be re-pointed later.
+  let path: string
+  try {
+    path = realpathSync(resolve(value))
+  } catch {
     throw new LauncherError(
-      `the dsh runtime path does not exist: ${path}`,
+      `the dsh runtime path does not exist: ${resolve(value)}`,
       'Pass --dsh-bin pointing at dsh\'s lib/bin.js, or unset it to use the installed @deepseek-ai/dsh.',
     )
   }
   const isDirectory = statSync(path).isDirectory()
+  if (!isDirectory && basename(path) !== 'bin.js') {
+    throw new LauncherError(
+      `the dsh runtime path must be the package's lib/bin.js, not ${basename(path)}: ${path}`,
+      'Point --dsh-bin at <installation>/lib/bin.js (or at the installation directory).',
+    )
+  }
   const packageDir = isDirectory ? packageDirFrom(path) : packageDirFrom(dirname(path))
   if (packageDir === undefined) {
     throw new LauncherError(

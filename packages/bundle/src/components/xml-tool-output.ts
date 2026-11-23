@@ -82,6 +82,9 @@ function textBlock(text: string, depth: number, body: (text: string) => string):
     .map(line => line === '' ? line : `${'  '.repeat(depth)}${body(line)}`)
 }
 
+/** Deepest element level the tree renderer descends; tool XML is shallow. */
+export const MAX_TREE_DEPTH = 24
+
 function treeLines(
   element: XmlElement,
   depth: number,
@@ -89,6 +92,9 @@ function treeLines(
   body: (text: string) => string,
 ): string[] {
   const indent = '  '.repeat(depth)
+  // A carved or resumed log can hold arbitrarily nested XML; without a floor
+  // the recursion would overflow the stack while drawing a card.
+  if (depth >= MAX_TREE_DEPTH) return [`${indent}${label('…')}`]
   const children = meaningfulChildren(element)
   if (children.length === 0) return [`${indent}${label(elementLabel(element))}`]
   if (children.length === 1 && typeof children[0] === 'string' && !children[0].includes('\n')) {

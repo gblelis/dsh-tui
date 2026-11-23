@@ -14,7 +14,7 @@ embutido. O bundle (`packages/bundle`) é privado do workspace e viaja como arte
 pnpm install
 pnpm check          # typecheck + lint + testes unitários
 pnpm compat         # 11 checagens contra o dsh pinado (submodule upstream)
-pnpm verify:package # lista de arquivos do tarball
+pnpm verify:package # arquivos, hash do bundle e coerência de versões do tarball
 pnpm build
 pnpm smoke:screen   # boot real + renderização
 pnpm smoke:chat     # prompt, stream, tool card, /export, /permissions, /login, retomada
@@ -34,8 +34,10 @@ git tag v0.2.1
 git push origin v0.2.1
 ```
 
-Ele roda os portões, exige que a tag case com `packages/cli/package.json`, roda `pnpm smoke:install` e só
-então executa `npm publish --access public --provenance`. Para o `--provenance` funcionar, a permissão
+Ele roda os portões, exige que a tag case com `packages/cli/package.json`, empacota **uma vez** e roda
+`pnpm smoke:install` sobre esse `.tgz`; só então publica exatamente esse arquivo com
+`npm publish … --access public --provenance --ignore-scripts` e cria a release com `gh`. Nada recompila
+depois dos portões, então o tarball publicado é o mesmo que passou nos smokes. Para o `--provenance` funcionar, a permissão
 `id-token: write` já está no workflow e o repositório precisa do secret **`NPM_TOKEN`** (token de
 automação com permissão de publish no escopo `@gblelis`). Alternativa mais forte: configurar
 [Trusted Publishing](https://docs.npmjs.com/trusted-publishers) no npm e remover o token.
@@ -50,8 +52,10 @@ npm login --scope @gblelis   # só uma vez
 npm publish --access public
 ```
 
-O `prepublishOnly` roda o build do workspace, então o `lib/` e o `bundle/` do tarball são sempre os
-recem-compilados.
+O `prepublishOnly` **não** recompila: ele roda `pnpm verify:package` e falha se o bundle embutido não
+bater com a versão do CLI, se o hash do conteúdo não fechar ou se houver arquivo em `bundle/` fora do
+manifesto. Rode `pnpm build` antes de publicar à mão — o que se publica é o que foi verificado, não um
+rebuild silencioso do momento do publish.
 
 ## Depois de publicar
 

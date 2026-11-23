@@ -7,6 +7,7 @@
 
 import { truncateToWidth, visibleWidth, type Component } from '@earendil-works/pi-tui'
 import { gradientText, type Palette } from './theme.ts'
+import { displayInlineText } from './text.ts'
 
 /** Facts the panel shows; every field except the session id is optional. */
 export interface WelcomeSnapshot {
@@ -70,7 +71,9 @@ export class WelcomeComponent implements Component {
   }
 
   private tagline(snapshot: WelcomeSnapshot): string {
-    return this.palette.dim(snapshot.tagline ?? 'terminal front end for DeepSeek Harness')
+    // The tagline can be a session title, which is external text: escape
+    // controls before the palette adds its own ANSI.
+    return this.palette.dim(displayInlineText(snapshot.tagline ?? 'terminal front end for DeepSeek Harness'))
   }
 
   private infoLines(snapshot: WelcomeSnapshot, inner: number): string[] {
@@ -90,7 +93,9 @@ export class WelcomeComponent implements Component {
     rows.push({ label: 'session', value: snapshot.sessionId })
     return rows.map((row) => {
       const label = this.palette.dim(padTo(row.label, LABEL_WIDTH))
-      return label + truncateToWidth(row.value, valueWidth, '…')
+      // Every value here can come from the session (id, cwd, title): escape
+      // controls before width math, or a crafted session rewrites the frame.
+      return label + truncateToWidth(displayInlineText(row.value), valueWidth, '…')
     })
   }
 

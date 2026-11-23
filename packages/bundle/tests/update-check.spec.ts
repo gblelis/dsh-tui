@@ -4,6 +4,7 @@ import { dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  MAX_REGISTRY_BYTES,
   UPDATE_CHECK_TTL_MS,
   checkForUpdate,
   classifyUpdate,
@@ -54,6 +55,10 @@ describe('classifyUpdate', () => {
 
   it('reports unknown without a stable channel', () => {
     expect(classifyUpdate('0.2.2-rc.5', { alpha: '0.2.3-alpha.2' })).toBe('unknown')
+  })
+
+  it('reports unknown when the runtime version cannot be parsed', () => {
+    expect(classifyUpdate('unknown', { latest: '0.2.2-rc.5' })).toBe('unknown')
   })
 })
 
@@ -128,9 +133,28 @@ describe('fetchChannels', () => {
     expect(channels).toEqual({ latest: '0.2.2-rc.5', alpha: '0.2.3-alpha.2' })
   })
 
+  it('refuses an answer larger than the accepted bound', async () => {
+    const huge = JSON.stringify({ latest: '0.2.2-rc.5', alpha: 'x'.repeat(MAX_REGISTRY_BYTES + 32) })
+    await expect(fetchChannels(async () => new Response(huge, { headers: { 'content-type': 'application/json' } }))).rejects.toThrow('exceeded')
+  })
+
+  it('rejects a declared oversized answer before reading it', async () => {
+    const response = new Response('{}', {
+      headers: { 'content-length': String(MAX_REGISTRY_BYTES + 1), 'content-type': 'application/json' },
+    })
+    await expect(fetchChannels(async () => response)).rejects.toThrow('declared')
+  })
+
   it('rejects a non-JSON or failing answer', async () => {
     await expect(fetchChannels(async () => jsonResponse({}, 500))).rejects.toThrow('HTTP 500')
     await expect(fetchChannels(async () => jsonResponse({ next: 'x' }))).rejects.toThrow('no latest channel')
+    await expect(fetchChannels(async () => new Response('{}', { headers: { 'content-type': 'text/html' } })))
+      .rejects.toThrow('not JSON')
+  })
+
+  it('refuses a non-https endpoint outside loopback', async () => {
+    await expect(fetchChannels(async () => jsonResponse({ latest: '0.2.2-rc.5' }), 'http://registry.example/d'))
+      .rejects.toThrow('non-https')
   })
 })
 

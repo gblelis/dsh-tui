@@ -10,7 +10,8 @@
  * @module @gblelis/dsh-tui-bundle/update-check
  */
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { randomBytes } from 'node:crypto'
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 /** Registry document naming the published channels for one package. */
@@ -21,6 +22,9 @@ export const UPDATE_CHECK_TTL_MS = 24 * 60 * 60 * 1000
 
 /** Network budget for the registry request; a slow registry must not queue up. */
 export const UPDATE_CHECK_TIMEOUT_MS = 2500
+
+/** Registry answers are tiny; anything larger is not this document. */
+export const MAX_REGISTRY_BYTES = 64 * 1024
 
 /** Channels the check reports, most relevant first. */
 export const TRACKED_CHANNELS = ['latest', 'alpha'] as const
@@ -128,12 +132,51 @@ export function compareVersions(left: string, right: string): number {
  * @returns The verdict used to decide whether anything is shown.
  */
 export function classifyUpdate(current: string, channels: ChannelVersions): UpdateVerdict {
+  // An unparsable runtime version must not read as "current": silence here
+  // would hide exactly the case the check exists to report.
+  if (parseVersion(current) === undefined) return 'unknown'
   const latest = channels.latest
   if (latest === undefined) return 'unknown'
   if (compareVersions(current, latest) < 0) return 'behind'
   const alpha = channels.alpha
   if (alpha !== undefined && compareVersions(current, alpha) < 0) return 'prerelease-available'
   return 'current'
+}
+
+/**
+ * Decode a JSON body while refusing to buffer more than `limit` bytes. The
+ * dist-tags document is under a kilobyte; a much larger answer means the
+ * request did not reach the document it expects.
+ * @param response - Registry answer.
+ * @param limit - Maximum accepted body size in bytes.
+ * @returns The parsed JSON value.
+ */
+async function readJsonBounded(response: Response, limit: number): Promise<unknown> {
+  const declared = Number(response.headers.get('content-length') ?? Number.NaN)
+  if (Number.isFinite(declared) && declared > limit) {
+    throw new Error(`registry answer declared ${String(declared)} bytes (limit ${String(limit)})`)
+  }
+  if (response.body === null) throw new Error('registry answer had no body')
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > limit) {
+      await reader.cancel()
+      throw new Error(`registry answer exceeded ${String(limit)} bytes`)
+    }
+    chunks.push(value)
+  }
+  const body = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return JSON.parse(new TextDecoder().decode(body))
 }
 
 /**
@@ -161,12 +204,23 @@ export async function fetchChannels(
   fetchImpl: typeof fetch = fetch,
   url: string = DIST_TAGS_URL,
 ): Promise<ChannelVersions> {
+  // A fixed https endpoint is expected. The override exists for tests, so a
+  // plain-http URL is only tolerated for a loopback host.
+  const target = new URL(url)
+  if (target.protocol !== 'https:' && !['127.0.0.1', 'localhost', '::1'].includes(target.hostname)) {
+    throw new Error(`refusing a non-https registry URL (${target.protocol}//${target.hostname})`)
+  }
   const response = await fetchImpl(url, {
     headers: { accept: 'application/json' },
+    // The document is served directly; following a redirect would let a
+    // compromised hop decide what this process trusts.
+    redirect: 'error',
     signal: AbortSignal.timeout(UPDATE_CHECK_TIMEOUT_MS),
   })
   if (!response.ok) throw new Error(`registry answered HTTP ${String(response.status)}`)
-  const channels = readChannels(await response.json())
+  const type = response.headers.get('content-type') ?? ''
+  if (type !== '' && !/json/iu.test(type)) throw new Error(`registry answered ${type}, not JSON`)
+  const channels = readChannels(await readJsonBounded(response, MAX_REGISTRY_BYTES))
   if (channels.latest === undefined) throw new Error('the registry answer carried no latest channel')
   return channels
 }
@@ -196,11 +250,18 @@ export async function readCachedUpdate(home: string): Promise<UpdateCheckRecord 
  */
 export async function writeCachedUpdate(home: string, record: UpdateCheckRecord): Promise<void> {
   const path = updateCachePath(home)
+  // Write then rename: two TUIs starting at once must never let a reader parse
+  // a half-written document.
+  const staging = `${path}.${randomBytes(6).toString('hex')}.tmp`
   try {
     await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, `${JSON.stringify(record, undefined, 2)}\n`, 'utf8')
+    // `wx` never reuses a planted file, and 0600 keeps the cache private like
+    // the sessions it sits beside.
+    await writeFile(staging, `${JSON.stringify(record, undefined, 2)}\n`, { encoding: 'utf8', mode: 0o600, flag: 'wx' })
+    await rename(staging, path)
   } catch {
-    // Non-fatal by design.
+    // A read-only home is not an error: the answer still reaches the screen.
+    await rm(staging, { force: true }).catch(() => {})
   }
 }
 

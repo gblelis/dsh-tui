@@ -6,7 +6,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -26,6 +26,18 @@ export interface EmbeddedBundle {
   readonly hash: string
   /** Package-relative paths, in copy order. */
   readonly files: readonly string[]
+}
+
+/**
+ * Reject a manifest entry that would leave the bundle directory. The list
+ * comes from the embedded manifest, so this is the last guard before those
+ * strings are used as write destinations.
+ * @param file - Package-relative path from the manifest.
+ * @returns whether the path is safe to join under the bundle root.
+ */
+export function isContainedRelativePath(file: string): boolean {
+  if (file === '' || file.startsWith('/') || /^[A-Za-z]:/u.test(file) || file.includes('\\')) return false
+  return file.split('/').every(segment => segment !== '' && segment !== '.' && segment !== '..')
 }
 
 /** The install stamp written beside the copied package. */
@@ -194,6 +206,52 @@ async function readStamp(profile: string): Promise<InstallStamp | undefined> {
   }
 }
 
+/** Result of checking the copied bundle against the embedded manifest. */
+export type InstalledBundleHealth =
+  | { readonly status: 'ok'; readonly files: number }
+  | { readonly status: 'missing' }
+  | { readonly status: 'mismatch'; readonly detail: string }
+  | { readonly status: 'unreadable'; readonly detail: string }
+
+/**
+ * Verify the bytes the profile will actually load against the embedded
+ * manifest. The stamp alone cannot catch a truncated or edited copy, which is
+ * exactly the state a failed disk write or a manual edit leaves behind.
+ * @param paths - resolved launcher paths.
+ * @returns the health of the installed copy.
+ */
+export async function verifyInstalledBundle(paths: ResolvedPaths): Promise<InstalledBundleHealth> {
+  let bundle: EmbeddedBundle
+  try {
+    bundle = await readEmbeddedBundle()
+  } catch (error: unknown) {
+    return { status: 'unreadable', detail: error instanceof Error ? error.message : String(error) }
+  }
+  if (!await exists(join(paths.bundle, 'package.json'))) return { status: 'missing' }
+  let installedVersion: unknown
+  try {
+    const manifest: unknown = JSON.parse(await readFile(join(paths.bundle, 'package.json'), 'utf8'))
+    installedVersion = (manifest as { version?: unknown } | null)?.version
+  } catch (error: unknown) {
+    return { status: 'mismatch', detail: `package.json is unreadable: ${error instanceof Error ? error.message : String(error)}` }
+  }
+  if (installedVersion !== bundle.version) {
+    return { status: 'mismatch', detail: `installed ${String(installedVersion ?? 'unknown')}, expected ${bundle.version}` }
+  }
+  const files: Array<{ path: string; content: Buffer }> = []
+  for (const file of bundle.files) {
+    if (!isContainedRelativePath(file)) return { status: 'mismatch', detail: `unsafe path ${file}` }
+    try {
+      files.push({ path: file, content: await readFile(join(paths.bundle, ...file.split('/'))) })
+    } catch {
+      return { status: 'mismatch', detail: `missing file ${file}` }
+    }
+  }
+  const actual = artifactHash(files)
+  if (actual !== bundle.hash) return { status: 'mismatch', detail: `content hash ${actual.slice(0, 12)} differs from ${bundle.hash.slice(0, 12)}` }
+  return { status: 'ok', files: files.length }
+}
+
 /**
  * Copy the embedded artifact into the profile when the stamp does not match.
  * The copy replaces the whole package directory, so a stale file can never
@@ -203,16 +261,23 @@ async function readStamp(profile: string): Promise<InstallStamp | undefined> {
  * @param dshVersion - runtime version, recorded for diagnostics.
  * @returns whether the copy ran.
  */
-async function installBundle(paths: ResolvedPaths, bundle: EmbeddedBundle, dshVersion: string | undefined): Promise<boolean> {
+async function installBundle(paths: ResolvedPaths, bundle: EmbeddedBundle, dshVersion: string | undefined, force: boolean): Promise<boolean> {
   const stamp = await readStamp(paths.profile)
   const installed = await exists(join(paths.bundle, 'package.json'))
-  if (installed && stamp?.version === bundle.version && stamp.hash === bundle.hash) return false
+  if (!force && installed && stamp?.version === bundle.version && stamp.hash === bundle.hash) {
+    // The stamp records what was written, not what is there now: a truncated or
+    // edited copy keeps a matching stamp. Hashing the seven shipped files costs
+    // about three milliseconds, so the boot path heals instead of trusting.
+    if ((await verifyInstalledBundle(paths)).status === 'ok') return false
+  }
 
   const source = embeddedDir()
   const files: Array<{ path: string; content: Buffer }> = []
   for (const file of bundle.files) {
-    const from = join(source, ...file.split('/'))
-    const content = await readFile(from)
+    if (!isContainedRelativePath(file)) {
+      throw new LauncherError(`the embedded bundle manifest names an unsafe path: ${file}`)
+    }
+    const content = await readFile(join(source, ...file.split('/')))
     files.push({ path: file, content })
   }
   if (artifactHash(files) !== bundle.hash) {
@@ -221,11 +286,22 @@ async function installBundle(paths: ResolvedPaths, bundle: EmbeddedBundle, dshVe
       'Reinstall the package: npm install -g @gblelis/dsh-tui@latest.',
     )
   }
-  await rm(paths.bundle, { recursive: true, force: true })
-  for (const file of files) {
-    const target = join(paths.bundle, ...file.path.split('/'))
-    await mkdir(dirname(target), { recursive: true })
-    await writeFile(target, file.content)
+  // Stage the new tree beside the installed one and swap it in one rename, so
+  // an interrupted run leaves either the old copy or the new one, never a
+  // half-written package the loader would try to import.
+  const staging = `${paths.bundle}.staging-${String(process.pid)}`
+  try {
+    await rm(staging, { recursive: true, force: true })
+    for (const file of files) {
+      const target = join(staging, ...file.path.split('/'))
+      await mkdir(dirname(target), { recursive: true })
+      await writeFile(target, file.content)
+    }
+    await rm(paths.bundle, { recursive: true, force: true })
+    await rename(staging, paths.bundle)
+  } catch (error: unknown) {
+    await rm(staging, { recursive: true, force: true }).catch(() => {})
+    throw error
   }
   await mkdir(join(paths.profile, PROFILE_STATE_DIR), { recursive: true })
   await writeFile(join(paths.profile, PROFILE_STATE_DIR, 'stamp.json'), `${JSON.stringify({
@@ -242,9 +318,11 @@ async function installBundle(paths: ResolvedPaths, bundle: EmbeddedBundle, dshVe
  * copy is only replaced when its stamp disagrees with the embedded build.
  * @param paths - resolved launcher paths.
  * @param dshVersion - runtime version reported by `doctor`, when known.
+ * @param options - `forceBundle` rewrites the copy even when the stamp matches,
+ *   which is what `sync` uses to heal a corrupted install.
  * @returns what changed this run.
  */
-export async function ensureProfile(paths: ResolvedPaths, dshVersion?: string): Promise<ProfileStatus> {
+export async function ensureProfile(paths: ResolvedPaths, dshVersion?: string, options: { forceBundle?: boolean } = {}): Promise<ProfileStatus> {
   const created = !await exists(paths.profile)
   await mkdir(paths.profile, { recursive: true })
   const bundle = await readEmbeddedBundle()
@@ -291,7 +369,7 @@ export async function ensureProfile(paths: ResolvedPaths, dshVersion?: string): 
   const workspacePath = join(paths.profile, 'pnpm-workspace.yaml')
   if (!await exists(workspacePath)) await writeFile(workspacePath, PROFILE_PNPM_WORKSPACE)
 
-  const bundleInstalled = await installBundle(paths, bundle, dshVersion)
+  const bundleInstalled = await installBundle(paths, bundle, dshVersion, options.forceBundle === true)
   return { paths, created, bundleInstalled, manifestUpdated, hasUserPatch }
 }
 

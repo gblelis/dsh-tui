@@ -20,6 +20,8 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
   atualizar o DSH é atualizar uma dependência, não reescrever o projeto.
 - **Sabe quando o upstream andou**: se o npm publicar um dsh mais novo que a build, a própria TUI avisa
   (e `/update` mostra os números).
+- **Auditável**: [docs/seguranca.md](docs/seguranca.md) traz o modelo de ameaça, os endurecimentos e a
+  análise de alcance dos advisories transitivos do runtime.
 
 ---
 
@@ -91,7 +93,7 @@ $DSH_HOME/
     cordis.patch.yml      # sua camada de patches (nunca é sobrescrita)
     pnpm-workspace.yaml
     node_modules/@gblelis/dsh-tui-bundle/   # cópia embutida no pacote CLI
-    .dsh-tui/stamp.json   # hash da cópia instalada (auto-reparo)
+    .dsh-tui/stamp.json   # hash da cópia instalada (auto-reparo a cada boot)
   sessions/               # as MESMAS sessões do Desktop/Web
   .credentials.yaml
 ```
@@ -226,7 +228,7 @@ pnpm lint
 pnpm test             # vitest (unitários)
 pnpm build            # bundle → lib/, CLI → lib/ + bundle/ embutido
 pnpm check            # typecheck + lint + test
-pnpm verify:package   # attw + publint no pacote que iria para o npm
+pnpm verify:package   # conteúdo, hash e versões do tarball que iria para o npm
 ```
 
 Layout:
