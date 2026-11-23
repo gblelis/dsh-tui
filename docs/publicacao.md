@@ -4,6 +4,30 @@ Este é o roteiro de release do `@gblelis/dsh-tui`. O pacote publicado é **um s
 embutido. O bundle (`packages/bundle`) é privado do workspace e viaja como artefato dentro de
 `packages/cli/bundle/`.
 
+## Descrição do repositório (About)
+
+O campo *About* do GitHub aceita uma linha (~350 caracteres) e até 20 tópicos. Sugestão pronta para colar
+(em inglês, porque é o que aparece para quem chega de fora):
+
+```
+TUI front end for DeepSeek Harness: the same core, tools and session format, straight in your terminal. No server, no browser.
+```
+
+Tópicos sugeridos (minúsculos, separados por espaço no campo *Topics*):
+
+```
+deepseek deepseek-harness dsh tui terminal cli cordis ai-agents typescript nodejs
+```
+
+Alternativa em português, se o público principal for pt-BR:
+
+```
+Interface TUI para o DeepSeek Harness: mesmo core, ferramentas e sessões, direto no terminal. Sem servidor e sem navegador.
+```
+
+O `description` do `package.json` publicado continua em inglês (`Terminal front end for DeepSeek Harness (embedded by ...)`),
+que é o texto exibido no npm.
+
 ## Antes de cada versão
 
 1. Suba a versão em `packages/cli/package.json` (é a versão publicada; o `version` da raiz é do workspace).

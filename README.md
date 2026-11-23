@@ -1,6 +1,6 @@
 # dsh-tui — DeepSeek Harness no terminal
 
-[English version](README.en.md)
+**Português** · [English](README.en.md)
 
 Front end **TUI** (Text User Interface) para o [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
 O DSH oficial só oferece Desktop e Web; o Web depende de um servidor HTTP, o que atrapalha acesso de outra
@@ -63,8 +63,8 @@ Requisitos: **Node.js ≥ 24.9** (mesmo piso do DSH) e um terminal de verdade (s
 Enquanto o pacote não está no npm público, instale a partir do tarball:
 
 ```bash
-git clone git@github.com:<você>/deepseek-harness-tui.git
-cd deepseek-harness-tui
+git clone https://github.com/SEU_USUARIO/dsh-tui.git
+cd dsh-tui
 corepack enable && pnpm install
 pnpm build
 cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.2.1.tgz
@@ -209,13 +209,14 @@ Decisões que sustentam a compatibilidade:
    DSH, então existe uma única cópia do core (mesmo `Context`, mesmas sessões).
 2. **Só a camada de terminal é nossa.** O resto do comportamento (ferramentas, permissões, compactação,
    providers) vem do `dsh-base` e continua evoluindo com o upstream.
-3. **`engines.dsh` + faixa do launcher.** O launcher recusa bootar um DSH fora de `^0.2.2-rc.5` em vez de
-   montar meia árvore; o bundle usaria o mesmo veredito do DSH.
+3. **`engines.dsh` + faixa do launcher.** O launcher recusa bootar um DSH fora de
+   `^0.2.2-rc.5 || ^0.2.3-alpha.2` em vez de montar meia árvore; o bundle usaria o mesmo veredito do DSH.
 4. **Sessões são arquivos do DSH.** Formato V4, gravadas pelo core: o que você começa no terminal pode ser
    retomado no Desktop/Web (e vice-versa).
 
 Detalhes: [arquitetura](docs/arquitetura.md) · [compatibilidade](docs/compatibilidade.md) ·
-[paridade](docs/paridade.md) · [publicação](docs/publicacao.md) · [porting/PROVENANCE](docs/porting/PROVENANCE.md).
+[paridade](docs/paridade.md) · [segurança](docs/seguranca.md) · [publicação](docs/publicacao.md) ·
+[porting/PROVENANCE](docs/porting/PROVENANCE.md).
 
 ---
 
@@ -238,7 +239,7 @@ Layout:
 | `packages/bundle/` | o *bundle* Cordis (privado, nunca publicado): TUI, startup, prompt-service, patch |
 | `packages/cli/` | o pacote publicado `@gblelis/dsh-tui`: launcher + artefato do bundle embutido |
 | `patches/` | patch do `@earendil-works/pi-tui` (frame sem borda, prompt customizado, word-wrap) |
-| `docs/` | arquitetura, instalação, compatibilidade, paridade, publicação, keybindings, troubleshooting |
+| `docs/` | arquitetura, instalação, compatibilidade, paridade, segurança, publicação, keybindings, troubleshooting |
 | `upstream/` | checkout do DSH na tag `dsh-v0.2.2-rc.5` (submódulo, só referência) |
 
 Depois de mudar o bundle: `pnpm --filter @gblelis/dsh-tui-bundle build && pnpm --filter @gblelis/dsh-tui build`.
@@ -256,8 +257,9 @@ de PR estão em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 1. `npm login` (usuário com acesso ao escopo `@gblelis`; ajuste `name` se for publicar em outro escopo).
 2. `pnpm release:build` → roda build + `verify:package`.
-3. `npm publish --access public` dentro de `packages/cli`.
-4. Tag `vX.Y.Z` dispara o workflow de release (build, verificação e `npm publish` com `NPM_TOKEN`).
+3. `npm publish --access public` dentro de `packages/cli` — o `prepublishOnly` só verifica, não recompila.
+4. Alternativa recomendada: tag `vX.Y.Z` dispara o workflow, que roda os gates, empacota uma vez, roda o
+   install smoke nesse `.tgz` e publica exatamente esse arquivo (com `--provenance`), criando a release.
 
 O pacote publicado contém apenas `lib/`, `bundle/`, `LICENSE`, `NOTICE.md` e `README.md`.
 
