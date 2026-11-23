@@ -1,6 +1,11 @@
 # dsh-tui — DeepSeek Harness in your terminal
 
-[Português](README.md) · **English**
+**English** · [Português](README.md)
+
+[![npm](https://img.shields.io/npm/v/@gblelis/dsh-tui?label=npm)](https://www.npmjs.com/package/@gblelis/dsh-tui)
+[![ci](https://github.com/gblelis/dsh-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/gblelis/dsh-tui/actions/workflows/ci.yml)
+![node](https://img.shields.io/badge/node-%E2%89%A524.9-brightgreen)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 A **TUI** (Text User Interface) front end for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
 The official DSH ships Desktop and Web only; the Web app needs an HTTP server, which gets in the way when
@@ -66,7 +71,7 @@ Requirements: **Node.js ≥ 24.9** (the same floor as DSH) and a real terminal (
 While the package is not on public npm, install from the tarball:
 
 ```bash
-git clone git@github.com:<you>/dsh-tui.git
+git clone https://github.com/gblelis/dsh-tui.git
 cd dsh-tui
 corepack enable && pnpm install
 pnpm build

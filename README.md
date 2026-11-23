@@ -2,6 +2,11 @@
 
 **Português** · [English](README.en.md)
 
+[![npm](https://img.shields.io/npm/v/@gblelis/dsh-tui?label=npm)](https://www.npmjs.com/package/@gblelis/dsh-tui)
+[![ci](https://github.com/gblelis/dsh-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/gblelis/dsh-tui/actions/workflows/ci.yml)
+![node](https://img.shields.io/badge/node-%E2%89%A524.9-brightgreen)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 Front end **TUI** (Text User Interface) para o [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
 O DSH oficial só oferece Desktop e Web; o Web depende de um servidor HTTP, o que atrapalha acesso de outra
 máquina (bloqueios de rede/DeepSeek). O `dsh-tui` roda o **mesmo core** do DSH — mesmos agentes, mesmas
@@ -63,7 +68,7 @@ Requisitos: **Node.js ≥ 24.9** (mesmo piso do DSH) e um terminal de verdade (s
 Enquanto o pacote não está no npm público, instale a partir do tarball:
 
 ```bash
-git clone https://github.com/SEU_USUARIO/dsh-tui.git
+git clone https://github.com/gblelis/dsh-tui.git
 cd dsh-tui
 corepack enable && pnpm install
 pnpm build

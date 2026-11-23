@@ -17,6 +17,14 @@
     "NOTICE.md",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gblelis/dsh-tui.git"
+  },
+  "homepage": "https://github.com/gblelis/dsh-tui#readme",
+  "bugs": {
+    "url": "https://github.com/gblelis/dsh-tui/issues"
+  },
   "engines": {
     "node": ">=24.9.0"
   },

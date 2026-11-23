@@ -46,7 +46,7 @@ instead of a half-composed tree. `dsh-tui doctor` reports the running runtime an
 ## Docs
 
 Architecture, compatibility policy, parity matrix, security notes and the porting provenance live in the
-repository: <https://github.com/SEU_USUARIO/dsh-tui>.
+repository: <https://github.com/gblelis/dsh-tui>.
 
 MIT. The terminal code is a port of DeepSeek Harness's first-party TUI (BSD-3-Clause), attributed in
 `NOTICE.md`.
