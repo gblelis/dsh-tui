@@ -79,8 +79,9 @@ export function compareVersions(left: string, right: string): number {
 /**
  * Whether a version satisfies an exact, caret, or minimum range.
  *
- * Supported forms: `^x.y.z[-pre]`, `>=x.y.z[-pre]`, and a bare version for an
- * exact match. Anything else returns `false` so an unknown policy fails closed.
+ * Supported forms: `^x.y.z[-pre]`, `>=x.y.z[-pre]`, a bare version for an
+ * exact match, and `||` between alternatives. Anything else returns `false` so
+ * an unknown policy fails closed.
  * @param version - installed version text.
  * @param range - supported range text.
  * @returns whether the version is acceptable.
@@ -88,20 +89,44 @@ export function compareVersions(left: string, right: string): number {
 export function satisfiesRange(version: string, range: string): boolean {
   const installed = parseVersion(version)
   if (installed === undefined) return false
+  // `||` separates alternative comparator sets, any of which may admit the
+  // version. The supported ranges only ever join two exact/caret floors.
+  const alternatives = range.split('||').map(part => part.trim()).filter(part => part !== '')
+  if (alternatives.length > 1) return alternatives.some(part => satisfiesRange(version, part))
   const text = range.trim()
   if (text.startsWith('>=')) {
+    const floor = parseVersion(text.slice(2))
+    if (floor === undefined) return false
+    if (admitsPrerelease(installed, floor) === false) return false
     return compareVersions(version, text.slice(2)) >= 0
   }
   if (text.startsWith('^')) {
     const floor = parseVersion(text.slice(1))
     if (floor === undefined) return false
+    if (admitsPrerelease(installed, floor) === false) return false
     if (compareVersions(version, text.slice(1)) < 0) return false
-    // Caret on 0.x pins the minor: `^0.2.2` admits 0.2.x (with any
-    // prerelease ordering above the floor) and nothing from 0.3 onward.
+    // Caret on 0.x pins the minor: `^0.2.2` admits 0.2.x above the floor and
+    // nothing from 0.3 onward.
     if (floor.major === 0) {
       return installed.major === 0 && installed.minor === floor.minor
     }
     return installed.major === floor.major
   }
   return compareVersions(version, text) === 0
+}
+
+/**
+ * Whether a prerelease installed version may satisfy a range, following npm's
+ * rule: a prerelease matches only when the range itself names a prerelease of
+ * the very same `major.minor.patch`. Without this, `^0.2.2-rc.5` would admit
+ * `0.2.3-alpha.2` — a different, breaking release line — and the launcher
+ * would boot a profile the bundle cannot compose.
+ * @param installed - Parsed installed version.
+ * @param floor - Parsed lower bound of the range.
+ * @returns `false` when the prerelease must be rejected, `true` otherwise.
+ */
+function admitsPrerelease(installed: ParsedVersion, floor: ParsedVersion): boolean {
+  if (installed.prerelease.length === 0) return true
+  if (floor.prerelease.length === 0) return false
+  return installed.major === floor.major && installed.minor === floor.minor && installed.patch === floor.patch
 }

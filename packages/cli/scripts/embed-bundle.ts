@@ -31,7 +31,7 @@ async function manifestJson(version: string): Promise<string> {
       './package.json': './package.json',
     },
     dsh: { bundle: { patch: './cordis.patch.yml' } },
-    engines: { node: '>=24.9.0', dsh: '^0.2.2-rc.5' },
+    engines: { node: '>=24.9.0', dsh: '^0.2.2-rc.5 || ^0.2.3-alpha.2' },
   }, undefined, 2)}\n`
 }
 

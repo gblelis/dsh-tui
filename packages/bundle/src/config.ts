@@ -157,6 +157,8 @@ export interface Config extends TuiConfig {
   initialSkill?: string
   /** Whether a fresh session draws the welcome panel (false: compact header). Defaults to true. */
   showWelcome?: boolean
+  /** Whether to look up published dsh releases and warn when this build is behind. Defaults to true. */
+  updateCheck?: boolean
 }
 
 /** Schemastery schema for the full plugin configuration. */
@@ -171,6 +173,7 @@ export const Config: z<Config> = z.object({
   permissionMode: z.string(),
   initialSkill: z.string(),
   showWelcome: z.boolean(),
+  updateCheck: z.boolean(),
   showReasoning: tuiConfigSchemaFields.showReasoning,
   maxToolOutputLines: tuiConfigSchemaFields.maxToolOutputLines,
   maxDiffEditLength: tuiConfigSchemaFields.maxDiffEditLength,

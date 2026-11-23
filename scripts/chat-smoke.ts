@@ -84,6 +84,9 @@ function captureEnv(output: string, input: readonly { afterMs: number; data: str
     DEEPSEEK_API_KEY: 'sk-smoke',
     DEEPSEEK_BASE_URL: model.baseURL,
     DSH_TELEMETRY_DISABLED: '1',
+    // Release awareness would add a registry request (and a possible notice)
+    // to a screen whose assertions are a golden comparison.
+    DSH_TUI_NO_UPDATE_CHECK: '1',
     DSH_TUI_CAPTURE_OUTPUT: output,
     DSH_TUI_CAPTURE_COLUMNS: String(COLUMNS),
     DSH_TUI_CAPTURE_ROWS: String(ROWS),
@@ -157,6 +160,9 @@ const result = await runTui([runtime.bin, '--profile', 'tui', '--new'], {
     DEEPSEEK_API_KEY: 'sk-smoke',
     DEEPSEEK_BASE_URL: model.baseURL,
     DSH_TELEMETRY_DISABLED: '1',
+    // Release awareness would add a registry request (and a possible notice)
+    // to a screen whose assertions are a golden comparison.
+    DSH_TUI_NO_UPDATE_CHECK: '1',
     DSH_TUI_CAPTURE_OUTPUT: rawFile,
     DSH_TUI_CAPTURE_COLUMNS: String(COLUMNS),
     DSH_TUI_CAPTURE_ROWS: String(ROWS),

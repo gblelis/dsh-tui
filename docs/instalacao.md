@@ -23,8 +23,8 @@ pnpm install
 pnpm build
 pnpm verify:package            # opcional: confere o conteúdo do tarball
 cd packages/cli
-npm pack                       # gblelis-dsh-tui-0.2.0.tgz
-npm install -g ./gblelis-dsh-tui-0.2.0.tgz
+npm pack                       # gblelis-dsh-tui-0.2.1.tgz
+npm install -g ./gblelis-dsh-tui-0.2.1.tgz
 ```
 
 Confira:
@@ -57,7 +57,7 @@ Saída esperada do `dsh-tui doctor` num ambiente pronto:
 ✓ Node.js: v24.9.0 (requires >= 24.9.0)
 ✓ DSH home: /home/você/.dsh (default ~/.dsh)
 ✓ Profile "tui": /home/você/.dsh/profiles/tui · bundles: @deepseek-ai/dsh-base, @gblelis/dsh-tui-bundle
-✓ Embedded bundle: @gblelis/dsh-tui-bundle@0.2.0 (7 files)
+✓ Embedded bundle: @gblelis/dsh-tui-bundle@0.2.1 (7 files)
 ✓ dsh runtime: 0.2.2-rc.5 at …/@deepseek-ai/dsh (found via package); dsh-tui targets ^0.2.2-rc.5
 ✓ Terminal: xterm-256color · stdin and stdout are TTYs
 ✓ Credentials: DEEPSEEK_API_KEY from the environment

@@ -22,6 +22,7 @@ import {
 } from '@earendil-works/pi-tui'
 import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { captureTerminalFromEnv } from './testing/capture-terminal.ts'
 import { exportFileName, renderSessionMarkdown } from './chat/export.ts'
@@ -127,6 +128,12 @@ import {
   SKILL_COMMAND_PREFIX,
 } from './chat/skill-invocation.ts'
 import { WelcomeComponent } from './components/welcome.ts'
+import {
+  checkForUpdate,
+  formatUpdateSummary,
+  updateNotice,
+  type UpdateStatus,
+} from './update-check.ts'
 import { ReferenceAutocompleteProvider } from './chat/autocomplete.ts'
 import {
   formatCwd,
@@ -402,6 +409,49 @@ export function createTuiChat(
     resolved.theme.color && resolved.theme.truecolor,
     config.showWelcome === false ? 'compact' : 'panel',
   )
+  // Release awareness: the launcher states which runtime it booted (so the
+  // answer is exact even when several dsh copies are installed), and the home
+  // decides where the cache lives. Both fall back to the documented defaults.
+  const dshHome = process.env.DSH_TUI_HOME?.trim() ?? process.env.DSH_HOME?.trim() ?? join(homedir(), '.dsh')
+  const runtimeVersion = process.env.DSH_TUI_RUNTIME_VERSION?.trim() ?? installedRuntimeVersion() ?? 'unknown'
+  const updateCheckEnabled = config.updateCheck !== false && process.env.DSH_TUI_NO_UPDATE_CHECK !== '1'
+  let updateStatus: UpdateStatus | undefined
+  const updateUrl = process.env.DSH_TUI_UPDATE_URL?.trim()
+  const showUpdateSummary = (status: UpdateStatus): void => {
+    for (const line of formatUpdateSummary(status, runtimeVersion)) appendNotice(line, 'info')
+  }
+  /**
+   * Look up published releases and report the result. `refresh` bypasses the
+   * cache; a failure is reported as such instead of silently disappearing.
+   * @param refresh - Whether to ignore the cached answer.
+   * @param quiet - Whether to stay silent on a current runtime (startup path).
+   */
+  const runUpdateCheck = async (refresh: boolean, quiet: boolean): Promise<void> => {
+    const status = await checkForUpdate({
+      home: dshHome,
+      ...refresh ? { refresh: true } : {},
+      ...updateUrl === undefined || updateUrl === '' ? {} : { url: updateUrl },
+    }).catch(() => undefined)
+    if (status === undefined) {
+      // A failed refresh still has the previous answer to show.
+      if (updateStatus !== undefined) showUpdateSummary(updateStatus)
+      else if (!quiet) appendNotice('Could not reach the npm registry; no release information available.', 'warning')
+      return
+    }
+    updateStatus = status
+    // An explicit `/update` wants the numbers; the startup path only speaks up
+    // when there is something to act on.
+    if (!quiet) {
+      showUpdateSummary(status)
+      requestRender()
+      return
+    }
+    const notice = updateNotice(status, runtimeVersion)
+    if (notice !== undefined) {
+      appendNotice(notice.text, notice.severity)
+      requestRender()
+    }
+  }
   const promptValues: TuiPromptValueHandle[] = [
     ctx.tuiPrompt.register('cwd', palette.bold(palette.accent(formattedCwd))),
     ctx.tuiPrompt.register('git/worktree', branch === undefined ? undefined : palette.dim(` (${displayText(branch)})`)),
@@ -1504,6 +1554,11 @@ export function createTuiChat(
       },
     })
     commandCtx.commands.register({
+      name: 'update',
+      description: 'Check whether a newer dsh release is published',
+      handler: async () => { await runUpdateCheck(true, false); return { kind: 'success' } },
+    })
+    commandCtx.commands.register({
       name: 'status',
       description: 'Show session diagnostics, system prompt, and registered tools',
       handler: async ({ signal }) => { await showStatus(signal); return { kind: 'success' } },
@@ -1922,6 +1977,9 @@ export function createTuiChat(
   tuiServiceFiber = ctx.inject([], (serviceCtx) => {
     new TuiExtensionServiceImpl(serviceCtx, agent, overlayManager)
   })
+  // Release awareness runs after the first frame is on screen: a slow registry
+  // must never delay the prompt, and the result is cached for a day.
+  if (updateCheckEnabled) void runUpdateCheck(false, true)
 
   // A launcher-seeded first turn (`dsh migrate`/`dsh upgrade`):
   // invoke the named skill exactly as a typed `/skill:<name>` would, once the
@@ -2009,10 +2067,38 @@ export function disposeRootAndExit(
     exit(code)
   }
   const timeout = setTimeout(exitOnce, ROOT_DISPOSE_TIMEOUT_MS)
-  void ctx.root.fiber.dispose().then(
+  // Cordis 4.2 moved the root context from `ctx.root` to the global symbol
+  // `Symbol.for('cordis.root')`; read both so one entry point serves every
+  // release this bundle admits.
+  const root = (ctx as unknown as Record<symbol, { fiber: { dispose(): Promise<void> } }>)[Symbol.for('cordis.root')]
+    ?? (ctx as unknown as { root: { fiber: { dispose(): Promise<void> } } }).root
+  void root.fiber.dispose().then(
     () => { clearTimeout(timeout); exitOnce() },
     () => { clearTimeout(timeout); exitOnce() },
   )
+}
+
+/**
+ * Version of the dsh runtime this process is running on, resolved from the same
+ * installation the profile loads its plugins from. The launcher passes the
+ * exact version in `DSH_TUI_RUNTIME_VERSION`; this fallback covers a direct
+ * `dsh --profile tui` invocation, where the release check would otherwise have
+ * nothing to compare.
+ * @returns The installed runtime version, or `undefined` when it cannot be read.
+ */
+function installedRuntimeVersion(): string | undefined {
+  try {
+    const { createRequire } = process.getBuiltinModule('node:module')
+    const require = createRequire(process.argv[1] ?? import.meta.url)
+    const manifest: unknown = require('@deepseek-ai/dsh/package.json')
+    if (manifest !== null && typeof manifest === 'object'
+      && typeof (manifest as { version?: unknown }).version === 'string') {
+      return (manifest as { version: string }).version
+    }
+  } catch {
+    // A bundle mounted outside a dsh installation has no runtime to name.
+  }
+  return undefined
 }
 
 /** Cordis entry point using the process terminal; explicit TUI composition requires a TTY pair. */

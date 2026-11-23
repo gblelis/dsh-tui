@@ -12,7 +12,7 @@ import { MIN_NODE, type ResolvedPaths } from './env.ts'
 import { bundleModuleDir, profileDir } from './env.ts'
 import { listInstalledBundle, readEmbeddedBundle } from './profile.ts'
 import { findRuntime, runtimeCompatible } from './runtime.ts'
-import { satisfiesRange } from './semver.ts'
+import { compareVersions, satisfiesRange } from './semver.ts'
 
 /** One diagnostic line. */
 export interface Diagnostic {
@@ -48,6 +48,36 @@ function envFileHasKey(path: string): boolean {
     return /^DEEPSEEK_API_KEY=\s*\S+/mu.test(readFileSync(path, 'utf8'))
   } catch {
     return false
+  }
+}
+
+/** Release facts the TUI cached under `$DSH_HOME/cache/dsh-tui`. */
+interface CachedRelease {
+  readonly checkedAt: number
+  readonly channels: { latest?: string; alpha?: string }
+}
+
+/**
+ * Read the release cache the TUI writes.
+ * @param home - Harness home directory.
+ * @returns The cached record, or `undefined` when absent or unreadable.
+ */
+function readUpdateCache(home: string): CachedRelease | undefined {
+  try {
+    const value: unknown = JSON.parse(readFileSync(join(home, 'cache', 'dsh-tui', 'update-check.json'), 'utf8'))
+    if (value === null || typeof value !== 'object') return undefined
+    const record = value as { checkedAt?: unknown; channels?: unknown }
+    if (typeof record.checkedAt !== 'number' || record.channels === null || typeof record.channels !== 'object') return undefined
+    const channels = record.channels as { latest?: unknown; alpha?: unknown }
+    return {
+      checkedAt: record.checkedAt,
+      channels: {
+        ...typeof channels.latest === 'string' ? { latest: channels.latest } : {},
+        ...typeof channels.alpha === 'string' ? { alpha: channels.alpha } : {},
+      },
+    }
+  } catch {
+    return undefined
   }
 }
 
@@ -162,6 +192,31 @@ export async function diagnose(paths: ResolvedPaths, explicitBin?: string): Prom
         hint: `Install a matching runtime (npm install -g @deepseek-ai/dsh@next) or pass --dsh-bin pointing at one. Session format V4 is shared across 0.2.x, but plugin APIs may differ.`,
       },
     })
+  }
+
+  // The bundle writes this cache after the first frame; doctor only reads it,
+  // so a diagnostic never blocks on the network.
+  if (runtime !== undefined) {
+    const cached = readUpdateCache(paths.home)
+    if (cached === undefined) {
+      out.push({
+        name: 'dsh release',
+        status: 'ok',
+        detail: 'not checked yet (the TUI fills this in on its next run)',
+      })
+    } else {
+      const latest = cached.channels.latest
+      const behind = latest !== undefined && compareVersions(runtime.version, latest) < 0
+      const checked = new Date(cached.checkedAt).toISOString().slice(0, 16).replace('T', ' ')
+      out.push({
+        name: 'dsh release',
+        status: behind ? 'warn' : 'ok',
+        detail: behind
+          ? `published ${latest} is newer than ${runtime.version} (checked ${checked} UTC)`
+          : `up to date with ${latest ?? 'the registry'} (checked ${checked} UTC)`,
+        ...behind ? { hint: 'Upgrade with npm install -g @gblelis/dsh-tui@latest; the TUI reports the same fact under /update.' } : {},
+      })
+    }
   }
 
   const tty = Boolean(process.stdin.isTTY && process.stdout.isTTY)

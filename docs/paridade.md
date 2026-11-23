@@ -36,6 +36,8 @@ Legenda: ✅ completo · 🟡 parcial (explicado abaixo) · ⛔ não se aplica a
 | Tokens e cache hit rate no rodapé | ✅ |
 | Tela inicial: painel de boas-vindas com modelo, diretório, preset e atalhos | ✅ (reskin; overlay original não portado) |
 | Providers adicionais via `llm-pi-ai` (OpenRouter, OpenAI, LiteLLM, Ollama/vLLM…) | ✅ (adapter do core; config na camada do usuário) |
+| Aviso de release do DSH (`/update`, `doctor`, alerta no transcript) | ✅ (só no terminal; o Web mostra a versão nas configurações) |
+| Runtime 0.2.3 (linha pré-release) | ✅ com `--dsh-bin`; o pin padrão continua na estável |
 | Editor multilinha com histórico, `Tab` e autocomplete de arquivos | ✅ |
 | Autocomplete de comandos e de referências de sessão | ✅ |
 | Diálogos de pergunta (`ask_user_question`) | ✅ |

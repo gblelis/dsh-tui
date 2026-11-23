@@ -72,6 +72,7 @@
         reasoningEffort: !!js ctx.tuiStartup.reasoningEffort
         permissionMode: !!js ctx.tuiStartup.permissionMode
         showWelcome: !!js ctx.tuiStartup.showWelcome
+        updateCheck: !!js ctx.tuiStartup.updateCheck
 
     # dsh-base exposes the `user-questions` seam but not the model-facing tool.
     - id: tool-ask-user

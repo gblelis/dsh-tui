@@ -60,6 +60,36 @@ describe('argument dispatch', () => {
     expect(invocation.rest).toEqual(['--home', '/not-mine', '--json'])
   })
 
+  it('admits either supported release line', () => {
+    const range = '^0.2.2-rc.5 || ^0.2.3-alpha.2'
+    expect(satisfiesRange('0.2.2-rc.5', range)).toBe(true)
+    expect(satisfiesRange('0.2.2', range)).toBe(true)
+    expect(satisfiesRange('0.2.3-alpha.2', range)).toBe(true)
+    expect(satisfiesRange('0.2.3-rc.1', range)).toBe(true)
+    // Alternatives do not widen the floor into unrelated lines.
+    expect(satisfiesRange('0.2.4-alpha.1', range)).toBe(false)
+    expect(satisfiesRange('0.3.0-alpha.1', range)).toBe(false)
+  })
+
+  it('refuses a prerelease from a different release line', () => {
+    // npm's rule: a prerelease only matches a range that names a prerelease of
+    // the same major.minor.patch. 0.2.3-alpha.2 is a different, breaking line.
+    expect(satisfiesRange('0.2.3-alpha.2', '^0.2.2-rc.5')).toBe(false)
+    expect(satisfiesRange('0.2.3-alpha.1', '^0.2.2-rc.5')).toBe(false)
+    expect(satisfiesRange('0.3.0-rc.1', '^0.2.2-rc.5')).toBe(false)
+  })
+
+  it('admits the pinned release and its own prereleases', () => {
+    expect(satisfiesRange('0.2.2-rc.5', '^0.2.2-rc.5')).toBe(true)
+    expect(satisfiesRange('0.2.2-rc.6', '^0.2.2-rc.5')).toBe(true)
+    expect(satisfiesRange('0.2.2', '^0.2.2-rc.5')).toBe(true)
+  })
+
+  it('refuses a prerelease against a stable floor', () => {
+    expect(satisfiesRange('26.0.0-rc.1', '>=24.9.0')).toBe(false)
+    expect(satisfiesRange('26.13.0', '>=24.9.0')).toBe(true)
+  })
+
   it('maps help and version aliases', () => {
     expect(parseInvocation(['-h']).command).toBe('help')
     expect(parseInvocation(['--help']).command).toBe('help')

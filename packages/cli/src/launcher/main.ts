@@ -188,7 +188,15 @@ function execRuntime(paths: ResolvedPaths, runtime: RuntimeInfo, appArgs: readon
   const args = runtimeArgs(runtime, PROFILE_NAME, appArgs)
   const result = spawnSync(process.execPath, args, {
     stdio: 'inherit',
-    env: { ...process.env, DSH_HOME: paths.home },
+    env: {
+      ...process.env,
+      DSH_HOME: paths.home,
+      // Hand the bundle the exact facts of this boot: which runtime it is
+      // running on (the install may hold several) and where the home is, so
+      // its release check caches beside the sessions it already knows.
+      DSH_TUI_HOME: paths.home,
+      DSH_TUI_RUNTIME_VERSION: runtime.version,
+    },
   })
   if (result.error !== undefined) {
     throw new LauncherError(`could not start dsh: ${result.error.message}`)

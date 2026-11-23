@@ -11,26 +11,31 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 
 ![Tool card de edição com diff e resposta do assistente](docs/assets/tool-card.png)
 
+![Aviso de release: o transcript informa que existe uma versão nova do dsh publicada](docs/assets/update.png)
+
 - **Um binário**, um comando: `dsh-tui`.
 - **Core compartilhado**: o CLI não reimplementa o DSH. Ele instala um *profile* que carrega o
   `@deepseek-ai/dsh-base` e adiciona apenas a camada de terminal.
 - **Compatível por construção**: o bundle declara `engines.dsh` e compila contra a API pública do DSH;
   atualizar o DSH é atualizar uma dependência, não reescrever o projeto.
+- **Sabe quando o upstream andou**: se o npm publicar um dsh mais novo que a build, a própria TUI avisa
+  (e `/update` mostra os números).
 
 ---
 
-## Estado atual (v0.2.0)
+## Estado atual (v0.2.1)
 
 | Área | Situação |
 | --- | --- |
 | Boot do profile + launcher (`install`, `sync`, `doctor`, `profile`, `runtime`, `version`, `print`) | ✅ verificado |
 | Chat completo: streaming, transcript, tool cards, diffs, raciocínio, timing por fase | ✅ portado |
 | Tela inicial: painel com modelo, diretório/branch, preset de permissão, sessão e atalhos; composer com régua dupla | ✅ |
-| Comandos `help`, `model`, `clear`, `details`, `palette`, `reload`, `resume`, `status`, `export`, `permissions`, `login`, `exit`/`quit` | ✅ |
+| Comandos `help`, `model`, `clear`, `details`, `palette`, `reload`, `resume`, `status`, `update`, `export`, `permissions`, `login`, `exit`/`quit` | ✅ |
 | Sessões: nova, `--continue`, `--resume [id]`, `--session-id`, `/resume` | ✅ |
 | Seleção de modelo e esforço de raciocínio (`/model`, `--model`, `--reasoning-effort`) | ✅ |
 | `--permission-mode`, `/permissions` em sessão, `ask_user_question`, referências `@sessão` | ✅ |
 | Agendamento (`schedule_*`), modelo por subagente, data/hora no contexto, skill `/skill:dsh-doc` | ✅ |
+| Aviso de release do DSH: `/update`, linha `dsh release` no `doctor` e alerta no transcript quando o pin está atrás | ✅ |
 | `/export [caminho]` (Markdown), `/login` (chave mascarada), MCP via `dsh-mcp-client` | ✅ |
 | Testes unitários das partes puras (launcher, tokens, timing, prompt, config) | ✅ |
 | Smoke de tela: boot real + renderização conferida no xterm (headless) | ✅ `pnpm smoke:screen` |
@@ -60,8 +65,8 @@ git clone git@github.com:<você>/deepseek-harness-tui.git
 cd deepseek-harness-tui
 corepack enable && pnpm install
 pnpm build
-cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.2.0.tgz
-npm install -g ./gblelis-dsh-tui-0.2.0.tgz
+cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.2.1.tgz
+npm install -g ./gblelis-dsh-tui-0.2.1.tgz
 ```
 
 Depois do primeiro publish no npm:
@@ -105,6 +110,7 @@ dsh-tui --resume <id>      # retoma uma sessão específica
 dsh-tui --model deepseek-official/deepseek-v4-pro --reasoning-effort high
 dsh-tui --permission-mode read-only
 dsh-tui --no-welcome       # pula o painel de boas-vindas (cabeçalho compacto)
+dsh-tui --no-update-check  # não consulta releases publicadas do DSH
 dsh-tui doctor             # diagnóstico de Node, profile, runtime e credenciais
 ```
 
@@ -161,7 +167,11 @@ A paleta mostra o papel de cada cor: `/palette`. Todos os atalhos: `/help`.
 | `/clear` | limpa a tela (o histórico da sessão permanece) |
 | `/details [collapsed\|expanded\|hidden] [reasoning on\|off]` | controla cards de ferramenta e raciocínio |
 | `/status` | diagnósticos da sessão, prompt de sistema e ferramentas |
+| `/update` | consulta as releases publicadas do dsh e diz se esta build está atrás |
 | `/resume` | lista sessões retomáveis deste diretório |
+| `/export [caminho]` | grava a sessão como transcript Markdown |
+| `/permissions [preset]` | mostra ou troca o preset de permissão |
+| `/login` | guarda uma API key no serviço de credenciais (prompt mascarado) |
 | `/palette` | mostra todas as cores/atributos usados |
 | `/reload` | (experimental) recarrega a configuração do loader |
 | `/exit`, `/quit` | sai após o turno atual |

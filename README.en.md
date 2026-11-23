@@ -15,6 +15,8 @@ terminal, with no server and no browser.
 
 ![An edit tool card with a diff and the assistant reply](docs/assets/tool-card.png)
 
+![Release notice: the transcript reports that a newer dsh is published](docs/assets/update.png)
+
 > Portuguese is this project's primary language: see the [README in Portuguese](README.md). The docs under
 > `docs/` are written in Portuguese.
 
@@ -29,7 +31,7 @@ npm install -g @gblelis/dsh-tui
 # from a checkout, before that
 git clone git@github.com:<you>/deepseek-harness-tui.git
 cd deepseek-harness-tui && corepack enable && pnpm install && pnpm build
-cd packages/cli && npm pack && npm install -g ./gblelis-dsh-tui-0.2.0.tgz
+cd packages/cli && npm pack && npm install -g ./gblelis-dsh-tui-0.2.1.tgz
 ```
 
 The package ships one launcher plus the embedded bundle; it installs `@deepseek-ai/dsh` itself, so the first
@@ -57,7 +59,11 @@ Keys: `Enter` send · `Shift/Alt+Enter` newline · `Esc` cancel turn · `Ctrl+C`
 everything.
 
 Commands: `/help`, `/model`, `/permissions`, `/login`, `/export`, `/clear`, `/details`, `/palette`,
-`/reload`, `/resume`, `/status`, `/exit`, `/quit`, plus the DSH core commands and `/skill:<name>`.
+`/reload`, `/resume`, `/status`, `/update`, `/exit`, `/quit`, plus the DSH core commands and `/skill:<name>`.
+
+`/update` reports whether a newer dsh is published on npm; the same fact appears automatically as a
+transcript notice when this build trails the published release, and as the `dsh release` row in
+`dsh-tui doctor`. The lookup is cached for a day and can be disabled with `--no-update-check`.
 
 MCP servers use the same `@deepseek-ai/dsh-mcp-client` rows as any DSH app; add them to your profile's user
 patch layer (see `docs/plugins.md`). The TUI starts even when a server is unreachable.

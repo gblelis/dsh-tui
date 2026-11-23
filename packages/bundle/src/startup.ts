@@ -39,6 +39,8 @@ export interface TuiStartupValues {
   permissionMode?: string
   /** Whether the welcome panel is offered on a fresh session. */
   showWelcome?: boolean
+  /** Whether to check published dsh releases. */
+  updateCheck?: boolean
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -69,6 +71,7 @@ function tuiCommand(): Command {
     .option('--reasoning-effort <id>', 'initial reasoning effort for this session')
     .option('--permission-mode <preset>', 'permission preset to apply, e.g. read-only or workspace-write')
     .option('--no-welcome', 'skip the welcome panel on a fresh session (compact header)')
+    .option('--no-update-check', 'skip the lookup of published dsh releases')
     .addHelpText('after', `
 Examples:
   dsh-tui                        fresh session in this working directory
@@ -96,6 +99,7 @@ export function apply(ctx: Context): void {
       reasoningEffort?: string
       permissionMode?: string
       welcome?: boolean
+      updateCheck?: boolean
     }>()
     // Commander rejects unknown options before this action runs, so every
     // conflict below is a user-choice conflict, not a grammar error.
@@ -131,6 +135,7 @@ export function apply(ctx: Context): void {
       ...reasoningEffort === undefined ? {} : { reasoningEffort },
       ...permissionMode === undefined ? {} : { permissionMode },
       ...options.welcome === false ? { showWelcome: false } : {},
+      ...options.updateCheck === false ? { updateCheck: false } : {},
     }
     ctx.provide(TUI_STARTUP_SERVICE, values)
   })

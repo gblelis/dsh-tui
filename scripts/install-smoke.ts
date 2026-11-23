@@ -93,6 +93,9 @@ const boot = spawnSync(bin, ['--new'], {
     DSH_HOME: home,
     DEEPSEEK_API_KEY: 'sk-install-smoke',
     DSH_TELEMETRY_DISABLED: '1',
+    // Release awareness would add a registry request (and a possible notice)
+    // to a screen whose assertions are a golden comparison.
+    DSH_TUI_NO_UPDATE_CHECK: '1',
     DSH_TUI_CAPTURE_OUTPUT: rawFile,
     DSH_TUI_CAPTURE_COLUMNS: String(COLUMNS),
     DSH_TUI_CAPTURE_ROWS: String(ROWS),

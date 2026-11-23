@@ -15,7 +15,7 @@ export const BUNDLE_PACKAGE = '@gblelis/dsh-tui-bundle'
  * carries the same range; this copy lets the launcher fail early with a better
  * message than a silently skipped bundle row.
  */
-export const DSH_COMPAT_RANGE = '^0.2.2-rc.5'
+export const DSH_COMPAT_RANGE = '^0.2.2-rc.5 || ^0.2.3-alpha.2'
 
 /** Profile name this front end owns under `$DSH_HOME/profiles`. */
 export const PROFILE_NAME = 'tui'

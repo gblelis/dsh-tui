@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.2.1 — 2026-11-23
+
+### Added
+
+- **Upstream release awareness**: the TUI asks npm which `@deepseek-ai/dsh` versions are published
+  (cached for a day under `$DSH_HOME/cache/dsh-tui`), warns in the transcript when this build trails the
+  stable channel, mentions a newer alpha without nagging, and exposes the full picture through `/update`.
+  `dsh-tui doctor` gained a `dsh release` row that reads the same cache without touching the network.
+  Disable with `--no-update-check` / `DSH_TUI_NO_UPDATE_CHECK=1`.
+
+### Changed
+
+- **Two supported release lines**: the bundle and the launcher now accept `^0.2.2-rc.5 || ^0.2.3-alpha.2`.
+  The Cordis 4.2 alpha removed `ctx.root` in favour of the global `Symbol.for('cordis.root')`; the
+  shutdown path reads the symbol and falls back to the property, so one build serves both. A real boot
+  against dsh `0.2.3-alpha.2` was verified (welcome panel, prompt, input). The development pin stays on
+  the stable release: the alpha ships alpha vendored loader/hmr/schemastery and requires
+  Node `^24.22.3 || >=26.13.1`.
+
+### Fixed
+
+- **Prerelease admission**: `^0.2.2-rc.5` alone no longer admits `0.2.3-alpha.2`. npm's rule — a prerelease
+  matches only a range naming a prerelease of the same `major.minor.patch` — is now implemented, so a
+  runtime from an unnamed line is refused with an actionable message instead of booting a profile the
+  bundle cannot compose.
+
 ## 0.2.0 — 2026-11-23
 
 ### Added
