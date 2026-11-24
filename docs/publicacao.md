@@ -4,6 +4,40 @@ Este é o roteiro de release do `@gblelis/dsh-tui`. O pacote publicado é **um s
 embutido. O bundle (`packages/bundle`) é privado do workspace e viaja como artefato dentro de
 `packages/cli/bundle/`.
 
+## Estado da publicação
+
+| Versão | Status |
+| --- | --- |
+| `0.2.1` | publicada no npm em 24/11/2026, com provenance SLSA v1; release do GitHub com o `.tgz` anexado |
+
+Dois detalhes observados no primeiro publish, que valem para os próximos:
+
+1. **Placeholder `0.0.0-stage`.** O npm criou `@gblelis/dsh-tui@0.0.0-stage` ("Temporary package
+   placeholder for staged publishing") no primeiro contato com o escopo. Ele não é `latest` e não afeta
+   `npm install`; é resquício do fluxo de staged publishing do npm e não precisa ser removido.
+2. **Staged publishing.** Se a conta/pacote exigir *staged publishing*, o `npm publish` do workflow sai
+   com sucesso mas **não publica**: ele deixa a versão aguardando aprovação humana com 2FA. Nesse caso:
+
+   ```bash
+   npm stage list @gblelis/dsh-tui    # mostra o id (UUID) da versão em staging
+   npm stage approve <id>             # pede o OTP do autenticador
+   ```
+
+   `npm stage list` não pede 2FA; `approve` pede. Para desligar o requisito, use *Settings → Publishing
+   access* no pacote — e aí o release volta a ser automático.
+
+## Trusted Publishing (próximo passo recomendado)
+
+Com o pacote já existente, dá para publicar sem token nenhum:
+
+1. npm → `@gblelis/dsh-tui` → *Settings* → *Trusted Publishing* → GitHub Actions, repositório
+   `gblelis/dsh-tui`, workflow `release.yml`.
+2. Apague o secret `NPM_TOKEN` e o token granular correspondente.
+
+O workflow já tem `id-token: write` e publica o tarball com `--provenance`, então não precisa mudar nada
+nele. Isso também resolve a depreciação anunciada pelo npm: tokens com bypass de 2FA deixam de publicar
+diretamente a partir de janeiro de 2027 (mudanças de conta já foram restringidas em agosto de 2026).
+
 ## Descrição do repositório (About)
 
 O campo *About* do GitHub aceita uma linha (~350 caracteres) e até 20 tópicos. Sugestão pronta para colar

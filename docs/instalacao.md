@@ -13,19 +13,16 @@ O runtime não é obrigatório na mão: `@gblelis/dsh-tui` declara `@deepseek-ai
 dependência, então `npm install -g` traz o runtime junto. Se você já tem o DSH instalado em outro lugar,
 pode apontar para ele com `--dsh-bin` / `DSH_TUI_DSH_BIN` (desde que esteja na faixa suportada).
 
-## Instalação a partir do repositório (enquanto não há publish)
+## Instalação pelo npm (recomendada)
 
 ```bash
-git clone git@github.com:<você>/deepseek-harness-tui.git
-cd deepseek-harness-tui
-corepack enable
-pnpm install
-pnpm build
-pnpm verify:package            # opcional: confere o conteúdo do tarball
-cd packages/cli
-npm pack                       # gblelis-dsh-tui-0.2.1.tgz
-npm install -g ./gblelis-dsh-tui-0.2.1.tgz
+npm install -g @gblelis/dsh-tui     # global
+npx @gblelis/dsh-tui@latest         # sem instalar
 ```
+
+O tarball publicado carrega **provenance** assinada (SLSA v1): a página do pacote no npm mostra de qual
+commit e de qual workflow ele saiu. O binário já declara `@deepseek-ai/dsh@0.2.2-rc.5`, então o runtime
+vem junto.
 
 Confira:
 
@@ -34,15 +31,24 @@ dsh-tui version
 dsh-tui doctor
 ```
 
-## Instalação pelo npm (depois do publish)
+Atualização: `npm install -g @gblelis/dsh-tui@latest` — o profile é reparado no próximo boot; o hash do
+artefato muda e o launcher recopia o bundle automaticamente.
+
+## Instalação a partir do repositório
+
+Para testar uma alteração local, ou usar um commit que ainda não virou release:
 
 ```bash
-npm install -g @gblelis/dsh-tui     # global
-npx @gblelis/dsh-tui@latest         # sem instalar
+git clone https://github.com/gblelis/dsh-tui.git
+cd dsh-tui
+corepack enable
+pnpm install
+pnpm build
+pnpm verify:package            # opcional: confere o conteúdo do tarball
+cd packages/cli
+npm pack                       # gblelis-dsh-tui-0.2.1.tgz
+npm install -g ./gblelis-dsh-tui-0.2.1.tgz
 ```
-
-Atualização: `npm install -g @gblelis/dsh-tui@latest` (o profile é reparado no próximo boot; o hash do
-artefato muda e o launcher recopia o bundle automaticamente).
 
 ## Primeiro boot
 

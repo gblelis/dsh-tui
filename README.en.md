@@ -68,7 +68,16 @@ in CI/on your machine.
 
 Requirements: **Node.js ≥ 24.9** (the same floor as DSH) and a real terminal (stdin and stdout TTYs).
 
-While the package is not on public npm, install from the tarball:
+```bash
+npm install -g @gblelis/dsh-tui
+# or, without installing:
+npx @gblelis/dsh-tui@latest
+```
+
+The `0.2.1` tarball ships with a signed **provenance** attestation (SLSA v1), visible on
+`https://www.npmjs.com/package/@gblelis/dsh-tui`.
+
+From source instead:
 
 ```bash
 git clone https://github.com/gblelis/dsh-tui.git
@@ -77,14 +86,6 @@ corepack enable && pnpm install
 pnpm build
 cd packages/cli && npm pack            # produces gblelis-dsh-tui-0.2.1.tgz
 npm install -g ./gblelis-dsh-tui-0.2.1.tgz
-```
-
-After the first npm publish:
-
-```bash
-npm install -g @gblelis/dsh-tui
-# or, without installing:
-npx @gblelis/dsh-tui@latest
 ```
 
 The binary already depends on `@deepseek-ai/dsh@0.2.2-rc.5`, so the runtime comes along.
