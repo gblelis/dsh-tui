@@ -129,6 +129,56 @@ rm -rf "$DSH_HOME/profiles/tui"      # opcional: remove o profile e a cópia do 
 
 As sessões em `$DSH_HOME/sessions` continuam intactas e podem ser retomadas pelo Desktop/Web.
 
+## Num servidor remoto (SSH)
+
+O caso de uso que motivou o projeto: o servidor tem o código, o Desktop não está lá e o Web exigiria um
+HTTP aberto. Com SSH você tem exatamente o terminal de que a TUI precisa.
+
+```bash
+ssh usuario@servidor
+node -v                                  # precisa ser >= 24.9.0
+npm install -g @gblelis/dsh-tui
+dsh-tui                                  # o SSH normal já aloca um TTY
+```
+
+Sem permissão de root, use um prefixo no seu home:
+
+```bash
+npm config set prefix ~/.local
+npm install -g @gblelis/dsh-tui          # binário em ~/.local/bin
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Ou instale o Node com nvm (sem sudo) e o `npm install -g` cai dentro dele.
+
+### Se o servidor não tem Node 24 ou não alcança o npm
+
+- **Node antigo**: a versão 24 exige `glibc >= 2.28` — CentOS 7 e derivados não rodam. Use nvm
+  (`nvm install 24`) ou, se nem isso for possível, o TUI não roda nessa máquina; não há build para Node 18/20.
+- **Sem registry**: empacote na sua máquina (`npm pack` em `packages/cli`), copie o `.tgz` com `scp` e
+  instale com `npm install -g ./gblelis-dsh-tui-0.2.2.tgz`. Ainda assim o npm precisa baixar
+  `@deepseek-ai/dsh@0.2.2-rc.5` — sem rede, copie também o `node_modules` da instalação global de uma
+  máquina com acesso (mesma arquitetura/glibc).
+
+### Credenciais no servidor
+
+```bash
+export DEEPSEEK_API_KEY=sk-...          # no ~/.bashrc ou num arquivo que você carregue
+dsh-tui                                 # ou use /login dentro da TUI
+```
+
+Também vale copiar `~/.dsh/.credentials.yaml` da sua máquina (`scp`), mas lembre que a chave passa a
+existir em mais um lugar — prefira variável de ambiente no servidor.
+
+### Terminal, locale e tmux
+
+- `LANG` precisa ser UTF-8 (`C.UTF-8` ou `en_US.UTF-8`); sem isso as bordas do painel saem tortas.
+- `COLORTERM=truecolor` habilita a paleta de 24 bits; sem ela o palette cai para 256 cores, ainda legível.
+- Funciona dentro de `tmux`/`screen`; para cores corretas no tmux use
+  `set -g default-terminal "tmux-256color"` e `set -ga terminal-features ",*:RGB"`.
+- **Sessões são locais**: `$DSH_HOME/sessions` fica no servidor. Para retomar no Desktop, copie os arquivos
+  ou aponte `DSH_HOME` para um diretório sincronizado (sem dois processos escrevendo ao mesmo tempo).
+
 ## Ambientes sem terminal
 
 A TUI exige TTY nos dois sentidos e **falha com mensagem clara** (não trava) quando não há terminal —
