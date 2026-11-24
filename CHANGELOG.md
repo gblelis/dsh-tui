@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2 — 2026-11-24
+
+### Changed
+
+- **Releases publish through npm Trusted Publishing**: the workflow authenticates with the job's OIDC
+  token (`id-token: write`) instead of a stored `NPM_TOKEN`, so there is no secret to leak and nothing to
+  rotate. The `setup-node` `registry-url` went with it — its generated `.npmrc` interpolated
+  `${NODE_AUTH_TOKEN}`, which is a hard error once no token exists.
+- **INSTALL docs lead with npm**: `npm install -g @gblelis/dsh-tui` is the recommended path now that 0.2.1
+  is published with a signed provenance attestation; building from source moved to an alternative section.
+
 ## 0.2.1 — 2026-11-23
 
 ### Added
@@ -37,6 +48,8 @@
 - **Drift gate fixed**: `verify:package` compared the bundle manifest with itself and never with the CLI
   version, and `scripts/` was outside the typecheck; both are fixed, and the checker now also rejects
   files in `bundle/` that the manifest does not hash.
+- **Published to npm** on 2026-11-24 with a signed SLSA v1 provenance attestation.
+
 - See `docs/seguranca.md` for the threat model, the reachability analysis of the 10 transitive
   advisories (all unused by this profile) and the accepted risks.
 

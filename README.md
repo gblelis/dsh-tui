@@ -30,7 +30,7 @@ ferramentas, mesmo formato de sessão — direto no seu terminal, sem servidor e
 
 ---
 
-## Estado atual (v0.2.1)
+## Estado atual (v0.2.2)
 
 | Área | Situação |
 | --- | --- |
@@ -71,7 +71,7 @@ npm install -g @gblelis/dsh-tui
 npx @gblelis/dsh-tui@latest
 ```
 
-A `0.2.1` saiu com **provenance** assinada (SLSA v1) — dá para conferir em
+A `0.2.2` sai com **provenance** assinada (SLSA v1) — dá para conferir em
 `https://www.npmjs.com/package/@gblelis/dsh-tui`.
 
 Alternativa a partir do código:
@@ -81,8 +81,8 @@ git clone https://github.com/gblelis/dsh-tui.git
 cd dsh-tui
 corepack enable && pnpm install
 pnpm build
-cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.2.1.tgz
-npm install -g ./gblelis-dsh-tui-0.2.1.tgz
+cd packages/cli && npm pack            # gera gblelis-dsh-tui-0.2.2.tgz
+npm install -g ./gblelis-dsh-tui-0.2.2.tgz
 ```
 
 O binário já declara `@deepseek-ai/dsh@0.2.2-rc.5` como dependência, então o runtime vem junto.

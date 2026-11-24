@@ -33,7 +33,7 @@ agents, same tools, same session format — straight in your terminal, with no s
 
 ---
 
-## Current state (v0.2.1)
+## Current state (v0.2.2)
 
 | Area | Status |
 | --- | --- |
@@ -74,7 +74,7 @@ npm install -g @gblelis/dsh-tui
 npx @gblelis/dsh-tui@latest
 ```
 
-The `0.2.1` tarball ships with a signed **provenance** attestation (SLSA v1), visible on
+The `0.2.2` tarball ships with a signed **provenance** attestation (SLSA v1), visible on
 `https://www.npmjs.com/package/@gblelis/dsh-tui`.
 
 From source instead:
@@ -84,8 +84,8 @@ git clone https://github.com/gblelis/dsh-tui.git
 cd dsh-tui
 corepack enable && pnpm install
 pnpm build
-cd packages/cli && npm pack            # produces gblelis-dsh-tui-0.2.1.tgz
-npm install -g ./gblelis-dsh-tui-0.2.1.tgz
+cd packages/cli && npm pack            # produces gblelis-dsh-tui-0.2.2.tgz
+npm install -g ./gblelis-dsh-tui-0.2.2.tgz
 ```
 
 The binary already depends on `@deepseek-ai/dsh@0.2.2-rc.5`, so the runtime comes along.

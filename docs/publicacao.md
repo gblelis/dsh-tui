@@ -92,8 +92,8 @@ pnpm smoke:install  # npm pack → npm install -g → boot do binário instalado
 O workflow `.github/workflows/release.yml` publica em tag `v*`:
 
 ```bash
-git tag v0.2.1
-git push origin v0.2.1
+git tag v0.2.2
+git push origin v0.2.2
 ```
 
 Ele roda os portões, exige que a tag case com `packages/cli/package.json`, empacota **uma vez** e roda

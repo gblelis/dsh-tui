@@ -1,6 +1,6 @@
 {
   "name": "@gblelis/dsh-tui-bundle",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Cordis bundle: interactive terminal front end for DeepSeek Harness over @deepseek-ai/dsh-base",
   "type": "module",
   "license": "MIT",
