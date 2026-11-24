@@ -40,7 +40,9 @@ jobs:
         with:
           node-version: 24.x
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+          # No registry-url: it writes an .npmrc holding `_authToken=${NODE_AUTH_TOKEN}`,
+          # and npm fails to interpolate an unset variable. Trusted Publishing
+          # authenticates through the OIDC token (`id-token: write`) instead.
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -86,18 +88,11 @@ jobs:
           DSH_TUI_TARBALL: ${{ steps.pack.outputs.tarball }}
         run: pnpm smoke:install
 
-      # Who the token authenticates as, without printing the token: a scope
-      # mismatch shows up here before the publish attempt does.
-      - name: npm identity
-        if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm whoami
-
+      # Trusted Publishing: npm exchanges the job's OIDC token for a
+      # short-lived credential, so there is no secret to leak and nothing to
+      # rotate. `--provenance` is what ties the tarball to this workflow.
       - name: Publish the verified tarball
         if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -o pipefail
           log="$RUNNER_TEMP/publish.log"
@@ -108,7 +103,6 @@ jobs:
           # admin token to read, and "exit code 1" alone is not actionable. The
           # tail is kept whole (up to 2 kB) because npm puts the reason after
           # the URL, and truncating there hid it once already.
-          echo "::error::npm identity: $(npm whoami 2>&1)"
           tail -n 25 "$log" | tr '\n' ' ' | cut -c1-2000 | sed 's/^/::error::/'
           exit 1
 

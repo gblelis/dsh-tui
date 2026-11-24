@@ -268,7 +268,8 @@ checklist are in [CONTRIBUTING.md](CONTRIBUTING.md).
 1. `npm login` (an account with access to the `@gblelis` scope; adjust `name` if you publish elsewhere).
 2. `pnpm release:build` → runs the build plus `verify:package`.
 3. `npm publish --access public` inside `packages/cli`.
-4. Tag `vX.Y.Z` triggers the release workflow (build, verification and `npm publish` with `NPM_TOKEN`).
+4. Tag `vX.Y.Z` triggers the release workflow (build, verification and `npm publish` through npm Trusted
+   Publishing — no token is stored in the repository).
 
 The published package contains only `lib/`, `bundle/`, `LICENSE`, `NOTICE.md` and `README.md`.
 

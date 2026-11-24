@@ -30,12 +30,16 @@ Dois detalhes observados no primeiro publish, que valem para os próximos:
 
 Com o pacote já existente, dá para publicar sem token nenhum:
 
-1. npm → `@gblelis/dsh-tui` → *Settings* → *Trusted Publishing* → GitHub Actions, repositório
-   `gblelis/dsh-tui`, workflow `release.yml`.
-2. Apague o secret `NPM_TOKEN` e o token granular correspondente.
+Configurado em 24/11/2026: npm → `@gblelis/dsh-tui` → *Settings* → *Trusted Publishing* → GitHub
+Actions, repositório `gblelis/dsh-tui`, workflow `release.yml`, *environment* vazio, com apenas
+`npm publish` liberado (`npm dist-tag` fica desmarcado, porque o publish já define `latest`).
 
-O workflow já tem `id-token: write` e publica o tarball com `--provenance`, então não precisa mudar nada
-nele. Isso também resolve a depreciação anunciada pelo npm: tokens com bypass de 2FA deixam de publicar
+O secret `NPM_TOKEN` e o token granular foram apagados. O workflow não passa mais `NODE_AUTH_TOKEN` nem
+usa `registry-url` no `setup-node` — aquele `.npmrc` interpolava `${NODE_AUTH_TOKEN}` e quebra quando a
+variável não existe. A autenticação agora é só o token OIDC do job (`id-token: write`), que o npm troca
+por uma credencial de vida curta.
+
+Isso também resolve a depreciação anunciada pelo npm: tokens com bypass de 2FA deixam de publicar
 diretamente a partir de janeiro de 2027 (mudanças de conta já foram restringidas em agosto de 2026).
 
 ## Descrição do repositório (About)
@@ -96,9 +100,10 @@ Ele roda os portões, exige que a tag case com `packages/cli/package.json`, empa
 `pnpm smoke:install` sobre esse `.tgz`; só então publica exatamente esse arquivo com
 `npm publish … --access public --provenance --ignore-scripts` e cria a release com `gh`. Nada recompila
 depois dos portões, então o tarball publicado é o mesmo que passou nos smokes. Para o `--provenance` funcionar, a permissão
-`id-token: write` já está no workflow e o repositório precisa do secret **`NPM_TOKEN`** (token de
-automação com permissão de publish no escopo `@gblelis`). Alternativa mais forte: configurar
-[Trusted Publishing](https://docs.npmjs.com/trusted-publishers) no npm e remover o token.
+`id-token: write` já está no workflow e a publicação usa
+[Trusted Publishing](https://docs.npmjs.com/trusted-publishers): nenhum secret, nenhum token para
+rotacionar. Se um dia for preciso voltar ao token, o caminho é criar um secret `NPM_TOKEN` e repor o
+`env: NODE_AUTH_TOKEN` no passo de publish.
 
 Também dá para disparar em "dry run" (Actions → release → Run workflow), que valida tudo sem publicar.
 
