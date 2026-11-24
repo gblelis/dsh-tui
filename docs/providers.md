@@ -9,11 +9,28 @@ basta declarar rotas no arquivo:
 $DSH_HOME/profiles/tui/cordis.patch.yml
 ```
 
+## O que o Desktop/Web compartilha com o TUI
+
+| Item | Compartilhado? | Onde vive |
+| --- | --- | --- |
+| Chaves e credenciais | **sim** | `$DSH_HOME/.credentials.yaml` |
+| Sessões | **sim** | `$DSH_HOME/sessions` |
+| Providers, rotas e modelos | **não** | `cordis.patch.yml` de cada profile |
+| Modelo padrão | **não** | `agent-default-model` de cada profile |
+
+A página **Models** do Desktop/Web grava em `~/.dsh/profiles/web/cordis.patch.yml`. O TUI lê
+`~/.dsh/profiles/tui/cordis.patch.yml` e nasce sem rota nenhuma além do provider oficial. Copiar o bloco
+`llm-pi-ai` uma vez resolve; se você mudar providers no Web depois, copie de novo.
+
+Credencial não dá trabalho: o `dsh-llm-pi-ai` resolve `apiKeyEnv` pelo serviço de credenciais, e o arquivo
+é o mesmo para os dois profiles — se a chave do LiteLLM já está salva ali (como ref `LITELLM_API_KEY`),
+não precisa exportar variável nem repetir a chave no patch.
+
 As rotas aparecem em `/model` e podem ser escolhidas por sessão, ou passadas na linha de comando:
 
 ```bash
 dsh-tui --model '<provider>/<model>'
-dsh-tui --new --model 'litellm/deepseek-v41-flash(max)'
+dsh-tui --new --model 'litellm/deepseek-v41-flash' --reasoning-effort max
 ```
 
 O arquivo é **seu**: o `dsh-tui install`/`sync` nunca sobrescreve `cordis.patch.yml`, só o bundle em
@@ -52,7 +69,7 @@ Exemplo (LiteLLM, o mesmo formato que a página Models grava):
         api: openai-completions
         baseURL: http://172.16.31.229:4000/v1
         models:
-          - id: deepseek-v41-flash(max)
+          - id: deepseek-v41-flash
             name: Deepseek v4.1 Flash
             maxTokens: 100000
             contextWindow: 400000
@@ -68,7 +85,7 @@ Exemplo (LiteLLM, o mesmo formato que a página Models grava):
   name: "@deepseek-ai/dsh-agent-default-model"
   config:
     provider: litellm
-    model: deepseek-v41-flash(max)
+    model: deepseek-v41-flash
     reasoningEffort: max
 ```
 

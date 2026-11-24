@@ -118,7 +118,7 @@ LiteLLM, um gateway OpenAI-compatible, Ollama ou vLLM ao terminal — a credenci
         api: openai-completions
         baseURL: http://127.0.0.1:4000/v1
         models:
-          - id: deepseek-v41-flash(max)
+          - id: deepseek-v41-flash
             contextWindow: 400000
 ```
 
