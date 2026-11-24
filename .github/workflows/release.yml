@@ -105,8 +105,11 @@ jobs:
             exit 0
           fi
           # Surface npm's own diagnosis as an annotation: the job log needs an
-          # admin token to read, and "exit code 1" alone is not actionable.
-          tail -n 20 "$log" | tr '\n' ' ' | cut -c1-1000 | sed 's/^/::error::/'
+          # admin token to read, and "exit code 1" alone is not actionable. The
+          # tail is kept whole (up to 2 kB) because npm puts the reason after
+          # the URL, and truncating there hid it once already.
+          echo "::error::npm identity: $(npm whoami 2>&1)"
+          tail -n 25 "$log" | tr '\n' ' ' | cut -c1-2000 | sed 's/^/::error::/'
           exit 1
 
       # `gh` ships with the runner, so the release step adds no third-party
