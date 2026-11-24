@@ -94,6 +94,40 @@ Exemplo (LiteLLM, o mesmo formato que a página Models grava):
 
 ---
 
+## Servidor novo (sem um profile `web` para copiar)
+
+Recém-instalado, o patch do profile é literalmente `[]` — **substitua** esse conteúdo, não anexe depois
+dele (dois documentos YAML no mesmo arquivo não carregam).
+
+```bash
+cat > ~/.dsh/profiles/tui/cordis.patch.yml <<'YAML'
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      litellm:
+        displayName: LiteLLM SIA
+        apiKeyEnv: LITELLM_API_KEY
+        api: openai-completions
+        baseURL: http://172.16.31.229:4000/v1
+        models:
+          - id: deepseek-v41-flash
+            name: Deepseek v4.1 Flash
+            maxTokens: 100000
+            contextWindow: 400000
+            input: [text, image]
+YAML
+export LITELLM_API_KEY=sk-...      # coloque no ~/.bashrc
+dsh-tui --new                      # /model deve listar "LiteLLM SIA"
+```
+
+Nesse caso a chave vem do **ambiente**: o `~/.dsh/.credentials.yaml` do seu Desktop não existe na máquina
+nova, e um `apiKeyEnv` sem variável (e sem ref salva) falha na hora da requisição. Testado: com o patch
+acima e `LITELLM_API_KEY` exportada, a TUI sobe e responde sem precisar de arquivo de credenciais.
+
+Cuidado com `baseURL` privado (`172.16.*`, `10.*`, `localhost`): só alcança se o servidor estiver na mesma
+rede/VPN. De fora, use o endereço público do gateway ou um túnel SSH.
+
 ## Providers do catálogo pi-ai (OpenRouter, OpenAI, Anthropic, Groq, Google…)
 
 Para um provider que o pi-ai já conhece, **não** é preciso declarar `api`, `baseURL` nem `models`: o
