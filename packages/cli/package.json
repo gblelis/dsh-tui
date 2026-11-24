@@ -4,6 +4,7 @@
   "description": "Interactive terminal front end (TUI) for DeepSeek Harness: runs a pinned dsh runtime with the dsh-tui profile bundle",
   "type": "module",
   "license": "MIT",
+  "author": "gblelis (https://github.com/gblelis)",
   "bin": {
     "dsh-tui": "./lib/bin.js"
   },

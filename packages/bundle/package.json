@@ -4,6 +4,7 @@
   "description": "Cordis bundle: interactive terminal front end for DeepSeek Harness over @deepseek-ai/dsh-base",
   "type": "module",
   "license": "MIT",
+  "author": "gblelis (https://github.com/gblelis)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gblelis/dsh-tui.git"
