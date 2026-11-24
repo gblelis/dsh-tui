@@ -8,7 +8,8 @@ embutido. O bundle (`packages/bundle`) é privado do workspace e viaja como arte
 
 | Versão | Status |
 | --- | --- |
-| `0.2.1` | publicada no npm em 24/11/2026, com provenance SLSA v1; release do GitHub com o `.tgz` anexado |
+| `0.2.1` | publicada em 24/11/2026 com token; provenance SLSA v1; release do GitHub com o `.tgz` |
+| `0.2.2` | publicada em 24/11/2026 **via Trusted Publishing** (OIDC, nenhum token no repositório); provenance SLSA v1; release com o `.tgz` |
 
 Dois detalhes observados no primeiro publish, que valem para os próximos:
 
@@ -29,6 +30,8 @@ Dois detalhes observados no primeiro publish, que valem para os próximos:
 ## Trusted Publishing (próximo passo recomendado)
 
 Com o pacote já existente, dá para publicar sem token nenhum:
+
+Validado na `0.2.2`: o passo de publish rodou sem `NODE_AUTH_TOKEN` e sem secret.
 
 Configurado em 24/11/2026: npm → `@gblelis/dsh-tui` → *Settings* → *Trusted Publishing* → GitHub
 Actions, repositório `gblelis/dsh-tui`, workflow `release.yml`, *environment* vazio, com apenas
