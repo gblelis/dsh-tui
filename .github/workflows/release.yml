@@ -86,11 +86,28 @@ jobs:
           DSH_TUI_TARBALL: ${{ steps.pack.outputs.tarball }}
         run: pnpm smoke:install
 
+      # Who the token authenticates as, without printing the token: a scope
+      # mismatch shows up here before the publish attempt does.
+      - name: npm identity
+        if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm whoami
+
       - name: Publish the verified tarball
         if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish "${{ steps.pack.outputs.tarball }}" --access public --provenance --ignore-scripts
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/publish.log"
+          if npm publish "${{ steps.pack.outputs.tarball }}" --access public --provenance --ignore-scripts 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          # Surface npm's own diagnosis as an annotation: the job log needs an
+          # admin token to read, and "exit code 1" alone is not actionable.
+          tail -n 20 "$log" | tr '\n' ' ' | cut -c1-1000 | sed 's/^/::error::/'
+          exit 1
 
       # `gh` ships with the runner, so the release step adds no third-party
       # action to the job that holds the npm token and the OIDC permission.
