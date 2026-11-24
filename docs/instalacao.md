@@ -9,6 +9,47 @@
 | dsh runtime | `^0.2.2-rc.5` | `dsh-tui runtime` |
 | Credencial DeepSeek | uma das fontes abaixo | `dsh-tui doctor` |
 
+## Instalando o Node (o npm vem junto)
+
+Não existe "instalar o npm" separado: ele é distribuído com o Node.js. O que você instala é o Node ≥
+24.9.0, e o `npm` aparece junto.
+
+### Sem sudo (nvm) — o caminho que funciona em qualquer servidor
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
+source ~/.bashrc                 # ou abra um terminal novo
+nvm install 24                   # 24.x LTS mais recente (24.22.3 hoje)
+node -v                          # confirme >= v24.9.0
+npm -v
+npm install -g @gblelis/dsh-tui
+```
+
+O `nvm install 24` já instala o npm na mesma versão de Node; nada roda como root.
+
+### Com sudo (Ubuntu/Debian via NodeSource)
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+O `nodejs` do repositório da distro costuma estar em 18/20 e **não serve** — o TUI exige ≥ 24.9.
+
+### Sem gerenciador de pacotes (container mínimo, servidor sem curl para scripts)
+
+```bash
+mkdir -p ~/.local/node && cd ~/.local/node
+ver=v24.22.3
+curl -fsSLO "https://nodejs.org/dist/$ver/node-$ver-linux-x64.tar.xz"
+tar -xJf "node-$ver-linux-x64.tar.xz" --strip-components=1
+export PATH="$HOME/.local/node/bin:$PATH"     # coloque no ~/.bashrc
+```
+
+- **Alpine/musl**: troque `linux-x64` por `linux-x64-musl` (ou use a imagem `node:24`).
+- **ARM** (Graviton, Ampere, Raspberry): troque `x64` por `arm64`.
+- Sem `xz`: baixe o `.tar.gz` no lugar do `.tar.xz`.
+
 O runtime não é obrigatório na mão: `@gblelis/dsh-tui` declara `@deepseek-ai/dsh@0.2.2-rc.5` como
 dependência, então `npm install -g` traz o runtime junto. Se você já tem o DSH instalado em outro lugar,
 pode apontar para ele com `--dsh-bin` / `DSH_TUI_DSH_BIN` (desde que esteja na faixa suportada).
